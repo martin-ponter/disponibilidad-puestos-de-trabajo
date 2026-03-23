@@ -1,11 +1,499 @@
 ---
-import Welcome from '../components/Welcome.astro';
-import Layout from '../layouts/Layout.astro';
-
-// Welcome to Astro! Wondering what to do next? Check out the Astro documentation at https://docs.astro.build
-// Don't want to use any of this? Delete everything in this file, the `assets`, `components`, and `layouts` directories, and start fresh.
+import Layout from "../layouts/Layout.astro";
+import "../styles/global.css";
 ---
 
 <Layout>
-	<Welcome />
+  <main class="min-h-screen bg-slate-50 text-slate-900">
+    <section class="relative overflow-hidden">
+      <div class="absolute inset-0 bg-[radial-gradient(circle_at_top_left,rgba(59,130,246,0.08),transparent_30%),radial-gradient(circle_at_bottom_right,rgba(168,85,247,0.06),transparent_28%)]"></div>
+
+      <div class="relative mx-auto max-w-7xl px-4 py-10 sm:px-6 lg:px-8">
+        <div class="mb-10">
+          <h1 class="mt-4 text-3xl font-semibold tracking-tight text-slate-900 sm:text-4xl lg:text-5xl">
+            Reserva tu mesa de forma rápida
+          </h1>
+
+          <p class="mt-4 max-w-2xl text-sm leading-6 text-slate-600 sm:text-base">
+            Selecciona la fecha, la oficina, la sala y el horario. Después elige una mesa
+            disponible en el mapa y confirma la reserva.
+          </p>
+        </div>
+
+        <div class="grid gap-6 xl:grid-cols-[420px_minmax(0,1fr)]">
+          <aside class="rounded-3xl border border-slate-200 bg-white p-5 shadow-xl shadow-slate-200/70">
+            <div class="mb-6">
+              <h2 class="text-lg font-semibold text-slate-900">Datos de la reserva</h2>
+              <p class="mt-1 text-sm text-slate-500">
+                Completa los campos para mostrar el plano y elegir una mesa.
+              </p>
+            </div>
+
+            <form id="reservation-form" class="space-y-5">
+              <div>
+                <label for="date" class="mb-2 block text-sm font-medium text-slate-700">
+                  Selecciona fecha
+                </label>
+                <input
+                  id="date"
+                  name="date"
+                  type="date"
+                  class="w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm text-slate-900 outline-none transition placeholder:text-slate-400 focus:border-blue-400 focus:ring-2 focus:ring-blue-500/20"
+                />
+              </div>
+
+              <div>
+                <label for="office" class="mb-2 block text-sm font-medium text-slate-700">
+                  Elige la oficina
+                </label>
+                <select
+                  id="office"
+                  name="office"
+                  class="w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm text-slate-900 outline-none transition focus:border-blue-400 focus:ring-2 focus:ring-blue-500/20"
+                >
+                  <option value="">Selecciona una oficina</option>
+                  <option value="Toledo">Toledo</option>
+                  <option value="Madrid">Madrid</option>
+                  <option value="Alcobendas">Alcobendas</option>
+                  <option value="Consuegra">Consuegra</option>
+                </select>
+              </div>
+
+              <div>
+                <label for="room" class="mb-2 block text-sm font-medium text-slate-700">
+                  Selecciona la sala
+                </label>
+                <select
+                  id="room"
+                  name="room"
+                  disabled
+                  class="w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm text-slate-900 outline-none transition disabled:cursor-not-allowed disabled:bg-slate-100 disabled:opacity-70 focus:border-blue-400 focus:ring-2 focus:ring-blue-500/20"
+                >
+                  <option value="">Primero elige una oficina</option>
+                </select>
+              </div>
+
+              <div class="grid gap-4 sm:grid-cols-2">
+                <div>
+                  <label for="start-time" class="mb-2 block text-sm font-medium text-slate-700">
+                    Hora de inicio
+                  </label>
+                  <input
+                    id="start-time"
+                    name="start-time"
+                    type="time"
+                    class="w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm text-slate-900 outline-none transition focus:border-blue-400 focus:ring-2 focus:ring-blue-500/20"
+                  />
+                </div>
+
+                <div>
+                  <label for="end-time" class="mb-2 block text-sm font-medium text-slate-700">
+                    Hora de fin
+                  </label>
+                  <input
+                    id="end-time"
+                    name="end-time"
+                    type="time"
+                    class="w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm text-slate-900 outline-none transition focus:border-blue-400 focus:ring-2 focus:ring-blue-500/20"
+                  />
+                </div>
+              </div>
+
+              <div class="rounded-2xl border border-slate-200 bg-slate-50 p-4">
+                <div class="mb-3 flex items-center justify-between">
+                  <span class="text-sm font-medium text-slate-700">Estado de las mesas</span>
+                </div>
+
+                <div class="grid grid-cols-1 gap-3 text-sm text-slate-600 sm:grid-cols-3">
+                  <div class="flex items-center gap-2">
+                    <span class="h-3 w-3 rounded-full bg-emerald-400"></span>
+                    Disponible
+                  </div>
+                  <div class="flex items-center gap-2">
+                    <span class="h-3 w-3 rounded-full bg-rose-400"></span>
+                    No disponible
+                  </div>
+                  <div class="flex items-center gap-2">
+                    <span class="h-3 w-3 rounded-full bg-blue-400"></span>
+                    Seleccionada
+                  </div>
+                </div>
+              </div>
+            </form>
+          </aside>
+
+          <section class="rounded-3xl border border-slate-200 bg-white p-5 shadow-xl shadow-slate-200/70">
+            <div class="mb-5 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+              <div>
+                <h2 class="text-lg font-semibold text-slate-900">Mapa de la oficina</h2>
+                <p id="map-subtitle" class="mt-1 text-sm text-slate-500">
+                  Selecciona una oficina y una sala para visualizar el plano.
+                </p>
+              </div>
+
+              <div
+                id="selected-desk-badge"
+                class="hidden rounded-full border border-blue-200 bg-blue-50 px-4 py-2 text-sm font-medium text-blue-700"
+              >
+                Mesa seleccionada: <span id="selected-desk-text">-</span>
+              </div>
+            </div>
+
+            <div
+              id="empty-state"
+              class="flex min-h-[420px] items-center justify-center rounded-[28px] border border-dashed border-slate-300 bg-slate-50 p-8 text-center"
+            >
+              <div class="max-w-md">
+                <div class="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-2xl bg-white text-2xl shadow-sm">
+                  🗺️
+                </div>
+                <h3 class="text-lg font-semibold text-slate-900">Aún no hay plano cargado</h3>
+                <p class="mt-2 text-sm leading-6 text-slate-500">
+                  Cuando elijas una oficina y una sala aparecerá aquí un mapa provisional con
+                  mesas disponibles y ocupadas.
+                </p>
+              </div>
+            </div>
+
+            <div
+              id="map-wrapper"
+              class="hidden"
+            >
+              <div class="overflow-hidden rounded-[28px] border border-slate-200 bg-slate-50 p-4 sm:p-6">
+                <div class="mb-4 flex flex-wrap items-center justify-between gap-3">
+                  <div class="rounded-2xl bg-white px-4 py-2 text-sm text-slate-600 shadow-sm">
+                    Plano provisional
+                  </div>
+                  <div
+                    class="rounded-2xl border border-slate-200 bg-white px-4 py-2 text-sm text-slate-600"
+                  >
+                    Haz clic en una mesa disponible
+                  </div>
+                </div>
+
+                <div
+                  id="office-map"
+                  class="relative min-h-[420px] rounded-[24px] border border-slate-200 bg-gradient-to-br from-slate-100 to-white p-4 sm:min-h-[520px] sm:p-6"
+                >
+                  <div class="absolute left-4 top-4 rounded-xl border border-slate-200 bg-white px-3 py-2 text-xs text-slate-600 sm:left-6 sm:top-6">
+                    Entrada
+                  </div>
+
+                  <div class="absolute right-4 top-4 rounded-xl border border-slate-200 bg-white px-3 py-2 text-xs text-slate-600 sm:right-6 sm:top-6">
+                    Ventanas
+                  </div>
+
+                  <div class="absolute left-1/2 top-6 h-14 w-32 -translate-x-1/2 rounded-2xl border border-slate-200 bg-slate-200/70"></div>
+
+                  <div class="absolute bottom-6 left-6 right-6 h-3 rounded-full bg-slate-200"></div>
+
+                  <div
+                    id="desks-grid"
+                    class="grid min-h-[360px] grid-cols-2 gap-4 pt-20 sm:grid-cols-3 lg:grid-cols-4"
+                  ></div>
+                </div>
+              </div>
+
+              <div class="mt-6 flex justify-end">
+                <button
+                  id="reserve-btn"
+                  type="button"
+                  class="inline-flex items-center justify-center rounded-2xl bg-slate-900 px-5 py-3 text-sm font-semibold text-white transition hover:scale-[1.01] hover:bg-slate-800 disabled:cursor-not-allowed disabled:bg-slate-300 disabled:text-slate-500"
+                  disabled
+                >
+                  Reservar
+                </button>
+              </div>
+            </div>
+          </section>
+        </div>
+      </div>
+    </section>
+
+    <div
+      id="reservation-modal"
+      class="pointer-events-none fixed inset-0 z-50 flex items-center justify-center bg-slate-900/30 p-4 opacity-0 backdrop-blur-sm transition"
+    >
+      <div class="w-full max-w-md rounded-3xl border border-slate-200 bg-white p-6 shadow-2xl">
+        <div
+          id="modal-icon"
+          class="mb-4 flex h-14 w-14 items-center justify-center rounded-2xl text-2xl"
+        >
+          ✅
+        </div>
+
+        <h3 id="modal-title" class="text-xl font-semibold text-slate-900">Reserva completada</h3>
+        <p id="modal-message" class="mt-3 text-sm leading-6 text-slate-600"></p>
+
+        <div class="mt-6 flex justify-end">
+          <button
+            id="close-modal-btn"
+            type="button"
+            class="rounded-2xl bg-slate-900 px-4 py-2 text-sm font-semibold text-white transition hover:bg-slate-800"
+          >
+            Cerrar
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <script>
+      const officeRooms = {
+        Toledo: ["Sala Principal", "Sala Norte", "Sala Reuniones", "Open Space"],
+        Madrid: ["Sala A", "Sala B", "Sala Dirección", "Sala Colaborativa"],
+        Alcobendas: ["Sala Atlas", "Sala Nexo", "Sala Focus"],
+        Consuegra: ["Sala Central", "Sala Archivo", "Sala Clientes"],
+      };
+
+      const officeDeskData = {
+        Toledo: [
+          { id: "T1", available: true },
+          { id: "T2", available: true },
+          { id: "T3", available: false },
+          { id: "T4", available: true },
+          { id: "T5", available: false },
+          { id: "T6", available: true },
+          { id: "T7", available: true },
+          { id: "T8", available: true },
+        ],
+        Madrid: [
+          { id: "M1", available: true },
+          { id: "M2", available: false },
+          { id: "M3", available: true },
+          { id: "M4", available: true },
+          { id: "M5", available: false },
+          { id: "M6", available: false },
+          { id: "M7", available: true },
+          { id: "M8", available: true },
+        ],
+        Alcobendas: [
+          { id: "A1", available: true },
+          { id: "A2", available: true },
+          { id: "A3", available: true },
+          { id: "A4", available: false },
+          { id: "A5", available: true },
+          { id: "A6", available: false },
+          { id: "A7", available: true },
+          { id: "A8", available: true },
+        ],
+        Consuegra: [
+          { id: "C1", available: false },
+          { id: "C2", available: true },
+          { id: "C3", available: true },
+          { id: "C4", available: true },
+          { id: "C5", available: false },
+          { id: "C6", available: true },
+          { id: "C7", available: true },
+          { id: "C8", available: false },
+        ],
+      };
+
+      const officeSelect = document.getElementById("office");
+      const roomSelect = document.getElementById("room");
+      const dateInput = document.getElementById("date");
+      const startTimeInput = document.getElementById("start-time");
+      const endTimeInput = document.getElementById("end-time");
+
+      const emptyState = document.getElementById("empty-state");
+      const mapWrapper = document.getElementById("map-wrapper");
+      const desksGrid = document.getElementById("desks-grid");
+      const mapSubtitle = document.getElementById("map-subtitle");
+
+      const reserveBtn = document.getElementById("reserve-btn");
+
+      const selectedDeskBadge = document.getElementById("selected-desk-badge");
+      const selectedDeskText = document.getElementById("selected-desk-text");
+
+      const modal = document.getElementById("reservation-modal");
+      const modalIcon = document.getElementById("modal-icon");
+      const modalTitle = document.getElementById("modal-title");
+      const modalMessage = document.getElementById("modal-message");
+      const closeModalBtn = document.getElementById("close-modal-btn");
+
+      let selectedDesk = null;
+
+      function populateRooms() {
+        const office = officeSelect.value;
+        roomSelect.innerHTML = "";
+
+        if (!office) {
+          roomSelect.disabled = true;
+          roomSelect.innerHTML = `<option value="">Primero elige una oficina</option>`;
+          renderMap();
+          return;
+        }
+
+        roomSelect.disabled = false;
+        roomSelect.innerHTML = `<option value="">Selecciona una sala</option>`;
+
+        officeRooms[office].forEach((room) => {
+          const option = document.createElement("option");
+          option.value = room;
+          option.textContent = room;
+          roomSelect.appendChild(option);
+        });
+
+        renderMap();
+      }
+
+      function getDeskCardClasses(available, isSelected) {
+        const base =
+          "desk group relative flex min-h-[92px] cursor-pointer items-center justify-center rounded-3xl border-2 text-sm font-semibold transition duration-200";
+
+        if (!available) {
+          return `${base} cursor-not-allowed border-rose-200 bg-rose-50 text-rose-700`;
+        }
+
+        if (isSelected) {
+          return `${base} border-blue-400 bg-blue-50 text-blue-700 shadow-md shadow-blue-100`;
+        }
+
+        return `${base} border-emerald-200 bg-emerald-50 text-emerald-700 hover:scale-[1.02] hover:border-emerald-300`;
+      }
+
+      function renderMap() {
+        const office = officeSelect.value;
+        const room = roomSelect.value;
+        selectedDesk = null;
+        selectedDeskBadge.classList.add("hidden");
+        selectedDeskText.textContent = "-";
+        reserveBtn.disabled = true;
+
+        if (!office || !room) {
+          emptyState.classList.remove("hidden");
+          mapWrapper.classList.add("hidden");
+          mapSubtitle.textContent =
+            "Selecciona una oficina y una sala para visualizar el plano.";
+          return;
+        }
+
+        emptyState.classList.add("hidden");
+        mapWrapper.classList.remove("hidden");
+        mapSubtitle.textContent = `${office} · ${room}`;
+
+        desksGrid.innerHTML = "";
+
+        const desks = officeDeskData[office] || [];
+
+        desks.forEach((desk) => {
+          const deskButton = document.createElement("button");
+          deskButton.type = "button";
+          deskButton.dataset.deskId = desk.id;
+          deskButton.dataset.available = desk.available ? "true" : "false";
+          deskButton.className = getDeskCardClasses(desk.available, false);
+
+          deskButton.innerHTML = `
+            <div class="flex flex-col items-center justify-center gap-2">
+              <span class="text-base">${desk.id}</span>
+              <span class="rounded-full px-2 py-1 text-[11px] font-medium ${
+                desk.available
+                  ? "bg-emerald-100 text-emerald-700"
+                  : "bg-rose-100 text-rose-700"
+              }">
+                ${desk.available ? "Disponible" : "Ocupada"}
+              </span>
+            </div>
+          `;
+
+          deskButton.addEventListener("click", () => {
+            if (!desk.available) return;
+
+            selectedDesk = desk.id;
+
+            [...desksGrid.querySelectorAll(".desk")].forEach((el) => {
+              const isAvailable = el.dataset.available === "true";
+              const isSelected = el.dataset.deskId === selectedDesk;
+              el.className = getDeskCardClasses(isAvailable, isSelected);
+            });
+
+            selectedDeskText.textContent = selectedDesk;
+            selectedDeskBadge.classList.remove("hidden");
+            validateReserveButton();
+          });
+
+          desksGrid.appendChild(deskButton);
+        });
+      }
+
+      function validateReserveButton() {
+        const canReserve =
+          dateInput.value &&
+          officeSelect.value &&
+          roomSelect.value &&
+          startTimeInput.value &&
+          endTimeInput.value &&
+          selectedDesk;
+
+        reserveBtn.disabled = !canReserve;
+      }
+
+      function openModal(success, message) {
+        modalTitle.textContent = success ? "Reserva completada" : "No se pudo completar";
+        modalMessage.textContent = message;
+
+        modalIcon.textContent = success ? "✅" : "❌";
+        modalIcon.className = success
+          ? "mb-4 flex h-14 w-14 items-center justify-center rounded-2xl bg-emerald-100 text-2xl"
+          : "mb-4 flex h-14 w-14 items-center justify-center rounded-2xl bg-rose-100 text-2xl";
+
+        modal.classList.remove("pointer-events-none", "opacity-0");
+      }
+
+      function closeModal() {
+        modal.classList.add("pointer-events-none", "opacity-0");
+      }
+
+      officeSelect.addEventListener("change", () => {
+        populateRooms();
+        validateReserveButton();
+      });
+
+      roomSelect.addEventListener("change", () => {
+        renderMap();
+        validateReserveButton();
+      });
+
+      dateInput.addEventListener("change", validateReserveButton);
+      startTimeInput.addEventListener("change", validateReserveButton);
+      endTimeInput.addEventListener("change", validateReserveButton);
+
+      reserveBtn.addEventListener("click", () => {
+        const date = dateInput.value;
+        const office = officeSelect.value;
+        const room = roomSelect.value;
+        const start = startTimeInput.value;
+        const end = endTimeInput.value;
+
+        if (!date || !office || !room || !start || !end || !selectedDesk) {
+          openModal(false, "Faltan campos por completar para poder realizar la reserva.");
+          return;
+        }
+
+        if (start >= end) {
+          openModal(false, "La hora de fin debe ser posterior a la hora de inicio.");
+          return;
+        }
+
+        const success = true;
+
+        if (success) {
+          openModal(
+            true,
+            `La reserva para el día ${date} en la oficina de ${office}, sala ${room}, mesa ${selectedDesk}, desde las ${start} hasta las ${end}, se ha realizado correctamente.`
+          );
+        } else {
+          openModal(
+            false,
+            `No se pudo completar la reserva para el día ${date} en la oficina de ${office}.`
+          );
+        }
+      });
+
+      closeModalBtn.addEventListener("click", closeModal);
+
+      modal.addEventListener("click", (e) => {
+        if (e.target === modal) closeModal();
+      });
+    </script>
+  </main>
 </Layout>
