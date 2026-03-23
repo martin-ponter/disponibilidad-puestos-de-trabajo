@@ -1,0 +1,1032 @@
+---
+import Layout from "../layouts/Layout.astro";
+import "../styles/global.css";
+---
+
+<Layout>
+  <main class="min-h-screen bg-slate-50 text-slate-900">
+    <section class="relative overflow-hidden">
+      <div class="absolute inset-0 bg-[radial-gradient(circle_at_top_left,rgba(59,130,246,0.08),transparent_30%),radial-gradient(circle_at_bottom_right,rgba(168,85,247,0.06),transparent_28%)]"></div>
+
+      <div class="relative mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
+        <div class="mb-8 flex items-center justify-between gap-4">
+          <a
+            href="/"
+            class="inline-flex items-center gap-2 rounded-2xl border border-slate-200 bg-white px-4 py-2.5 text-sm font-medium text-slate-700 shadow-sm transition hover:border-slate-300 hover:bg-slate-100"
+          >
+            <span>←</span>
+            Volver
+          </a>
+
+          <div class="rounded-full border border-slate-200 bg-white px-4 py-2 text-sm font-medium text-slate-600 shadow-sm">
+            Reserva de puestos
+          </div>
+        </div>
+
+        <div class="mb-8">
+          <h1 class="text-3xl font-semibold tracking-tight text-slate-900 sm:text-4xl lg:text-5xl">
+            Selecciona un día para gestionar tu jornada
+          </h1>
+
+          <p class="mt-4 max-w-3xl text-sm leading-7 text-slate-600 sm:text-base">
+            Elige una fecha en el calendario. Después podrás indicar si trabajas o no
+            trabajas ese día y completar la reserva de mesa si corresponde.
+          </p>
+        </div>
+
+        <section class="rounded-3xl border border-slate-200 bg-white p-5 shadow-xl shadow-slate-200/70 sm:p-6">
+          <div class="mb-6 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+            <div>
+              <h2 class="text-xl font-semibold text-slate-900">Calendario</h2>
+              <p class="mt-1 text-sm text-slate-500">
+                Pulsa en un día para registrar tu disponibilidad o reservar puesto.
+              </p>
+            </div>
+
+            <div
+              id="selected-date-badge"
+              class="hidden rounded-full border border-blue-200 bg-blue-50 px-4 py-2 text-sm font-medium text-blue-700"
+            >
+              Día seleccionado: <span id="selected-date-text">-</span>
+            </div>
+          </div>
+
+          <div class="rounded-[28px] border border-slate-200 bg-slate-50 p-4 sm:p-6">
+            <div class="mb-5 flex items-center justify-between gap-4">
+              <button
+                id="prev-month-btn"
+                type="button"
+                class="inline-flex h-11 w-11 items-center justify-center rounded-2xl border border-slate-200 bg-white text-slate-700 shadow-sm transition hover:bg-slate-100"
+              >
+                ←
+              </button>
+
+              <div class="text-center">
+                <p id="calendar-month-label" class="text-lg font-semibold text-slate-900"></p>
+                <p class="text-sm text-slate-500">Selecciona un día</p>
+              </div>
+
+              <button
+                id="next-month-btn"
+                type="button"
+                class="inline-flex h-11 w-11 items-center justify-center rounded-2xl border border-slate-200 bg-white text-slate-700 shadow-sm transition hover:bg-slate-100"
+              >
+                →
+              </button>
+            </div>
+
+            <div class="grid grid-cols-7 gap-2 text-center text-xs font-semibold uppercase tracking-wide text-slate-500 sm:gap-3">
+              <div class="py-2">Lun</div>
+              <div class="py-2">Mar</div>
+              <div class="py-2">Mié</div>
+              <div class="py-2">Jue</div>
+              <div class="py-2">Vie</div>
+              <div class="py-2">Sáb</div>
+              <div class="py-2">Dom</div>
+            </div>
+
+            <div id="calendar-grid" class="mt-3 grid grid-cols-7 gap-2 sm:gap-3"></div>
+          </div>
+        </section>
+      </div>
+    </section>
+
+    <div
+      id="day-modal"
+      class="pointer-events-none fixed inset-0 z-50 flex items-center justify-center bg-slate-900/30 p-4 opacity-0 backdrop-blur-sm transition"
+    >
+      <div class="max-h-[90vh] w-full max-w-6xl overflow-auto rounded-3xl border border-slate-200 bg-white shadow-2xl">
+        <div class="sticky top-0 z-10 border-b border-slate-200 bg-white/95 px-5 py-4 backdrop-blur sm:px-6">
+          <div class="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+            <div>
+              <h3 class="text-xl font-semibold text-slate-900">Gestionar jornada</h3>
+              <p id="modal-selected-date" class="mt-1 text-sm text-slate-500">
+                Fecha seleccionada: -
+              </p>
+            </div>
+
+            <button
+              id="close-day-modal-btn"
+              type="button"
+              class="inline-flex items-center justify-center rounded-2xl border border-slate-200 bg-white px-4 py-2 text-sm font-medium text-slate-700 transition hover:bg-slate-100"
+            >
+              Cerrar
+            </button>
+          </div>
+        </div>
+
+        <div class="p-5 sm:p-6">
+          <div class="mb-6">
+            <h4 class="text-base font-semibold text-slate-900">¿Trabajas este día?</h4>
+            <p class="mt-1 text-sm text-slate-500">
+              Indica si trabajas o si ese día no estarás disponible.
+            </p>
+          </div>
+
+          <div class="grid gap-4 md:grid-cols-2">
+            <button
+              id="works-card"
+              type="button"
+              class="status-card rounded-3xl border border-slate-200 bg-white p-5 text-left shadow-sm transition hover:border-blue-300 hover:bg-blue-50"
+              data-status="works"
+            >
+              <div class="mb-4 flex h-12 w-12 items-center justify-center rounded-2xl bg-emerald-50 text-2xl">
+                💼
+              </div>
+              <h5 class="text-lg font-semibold text-slate-900">Trabaja</h5>
+              <p class="mt-2 text-sm leading-6 text-slate-600">
+                Trabajaré ese día. Puede ser en oficina, teletrabajo o asistiendo a un evento.
+              </p>
+            </button>
+
+            <button
+              id="not-works-card"
+              type="button"
+              class="status-card rounded-3xl border border-slate-200 bg-white p-5 text-left shadow-sm transition hover:border-blue-300 hover:bg-blue-50"
+              data-status="not-works"
+            >
+              <div class="mb-4 flex h-12 w-12 items-center justify-center rounded-2xl bg-amber-50 text-2xl">
+                🌴
+              </div>
+              <h5 class="text-lg font-semibold text-slate-900">No trabaja</h5>
+              <p class="mt-2 text-sm leading-6 text-slate-600">
+                Ese día no trabajaré. Podrás indicar el motivo: vacaciones, baja, permiso, etc.
+              </p>
+            </button>
+          </div>
+
+          <div id="works-section" class="mt-8 hidden">
+            <div class="grid gap-6 xl:grid-cols-[380px_minmax(0,1fr)]">
+              <aside class="rounded-3xl border border-slate-200 bg-slate-50 p-5">
+                <div class="mb-5">
+                  <h4 class="text-lg font-semibold text-slate-900">Datos de la jornada</h4>
+                  <p class="mt-1 text-sm text-slate-500">
+                    Completa la información para cargar el plano y gestionar tu reserva.
+                  </p>
+                </div>
+
+                <form id="reservation-form" class="space-y-5">
+                  <div>
+                    <label for="office" class="mb-2 block text-sm font-medium text-slate-700">
+                      Oficina
+                    </label>
+                    <select
+                      id="office"
+                      name="office"
+                      class="w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm text-slate-900 outline-none transition focus:border-blue-400 focus:ring-2 focus:ring-blue-500/20"
+                    >
+                      <option value="">Selecciona una oficina</option>
+                      <option value="Toledo">Toledo</option>
+                      <option value="Madrid">Madrid</option>
+                      <option value="Alcobendas">Alcobendas</option>
+                      <option value="Consuegra">Consuegra</option>
+                    </select>
+                  </div>
+
+                  <div>
+                    <label for="room" class="mb-2 block text-sm font-medium text-slate-700">
+                      Sala
+                    </label>
+                    <select
+                      id="room"
+                      name="room"
+                      disabled
+                      class="w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm text-slate-900 outline-none transition disabled:cursor-not-allowed disabled:bg-slate-100 disabled:opacity-70 focus:border-blue-400 focus:ring-2 focus:ring-blue-500/20"
+                    >
+                      <option value="">Primero elige una oficina</option>
+                    </select>
+                  </div>
+
+                  <div class="grid gap-4 sm:grid-cols-2">
+                    <div>
+                      <label
+                        for="start-time"
+                        class="mb-2 block text-sm font-medium text-slate-700"
+                      >
+                        Hora de inicio
+                      </label>
+                      <input
+                        id="start-time"
+                        name="start-time"
+                        type="time"
+                        class="w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm text-slate-900 outline-none transition focus:border-blue-400 focus:ring-2 focus:ring-blue-500/20"
+                      />
+                    </div>
+
+                    <div>
+                      <label
+                        for="end-time"
+                        class="mb-2 block text-sm font-medium text-slate-700"
+                      >
+                        Hora de fin
+                      </label>
+                      <input
+                        id="end-time"
+                        name="end-time"
+                        type="time"
+                        class="w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm text-slate-900 outline-none transition focus:border-blue-400 focus:ring-2 focus:ring-blue-500/20"
+                      />
+                    </div>
+                  </div>
+
+                  <div class="rounded-2xl border border-slate-200 bg-white p-4">
+                    <p class="mb-3 text-sm font-medium text-slate-700">Tipo de jornada</p>
+
+                    <label class="flex items-start gap-3 rounded-2xl border border-slate-200 p-3 transition hover:bg-slate-50">
+                      <input
+                        id="remote-checkbox"
+                        type="checkbox"
+                        class="mt-1 h-4 w-4 rounded border-slate-300 text-blue-600 focus:ring-blue-500"
+                      />
+                      <div>
+                        <span class="block text-sm font-medium text-slate-900">Teletrabajo</span>
+                        <span class="mt-1 block text-sm text-slate-500">
+                          No necesito reservar una mesa en oficina.
+                        </span>
+                      </div>
+                    </label>
+
+                    <label class="mt-3 flex items-start gap-3 rounded-2xl border border-slate-200 p-3 transition hover:bg-slate-50">
+                      <input
+                        id="event-checkbox"
+                        type="checkbox"
+                        class="mt-1 h-4 w-4 rounded border-slate-300 text-blue-600 focus:ring-blue-500"
+                      />
+                      <div>
+                        <span class="block text-sm font-medium text-slate-900">Evento</span>
+                        <span class="mt-1 block text-sm text-slate-500">
+                          Estaré fuera de mi puesto habitual y no necesito mesa.
+                        </span>
+                      </div>
+                    </label>
+                  </div>
+
+                  <div class="rounded-2xl border border-slate-200 bg-white p-4">
+                    <div class="mb-3 flex items-center justify-between">
+                      <span class="text-sm font-medium text-slate-700">Estado de las mesas</span>
+                    </div>
+
+                    <div class="grid grid-cols-1 gap-3 text-sm text-slate-600 sm:grid-cols-3">
+                      <div class="flex items-center gap-2">
+                        <span class="h-3 w-3 rounded-full bg-emerald-400"></span>
+                        Disponible
+                      </div>
+                      <div class="flex items-center gap-2">
+                        <span class="h-3 w-3 rounded-full bg-rose-400"></span>
+                        No disponible
+                      </div>
+                      <div class="flex items-center gap-2">
+                        <span class="h-3 w-3 rounded-full bg-blue-400"></span>
+                        Seleccionada
+                      </div>
+                    </div>
+                  </div>
+                </form>
+              </aside>
+
+              <section class="rounded-3xl border border-slate-200 bg-white p-5 shadow-sm">
+                <div class="mb-5 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+                  <div>
+                    <h4 class="text-lg font-semibold text-slate-900">Mapa de la oficina</h4>
+                    <p id="map-subtitle" class="mt-1 text-sm text-slate-500">
+                      Selecciona una oficina y una sala para visualizar el plano.
+                    </p>
+                  </div>
+
+                  <div
+                    id="selected-desk-badge"
+                    class="hidden rounded-full border border-blue-200 bg-blue-50 px-4 py-2 text-sm font-medium text-blue-700"
+                  >
+                    Mesa seleccionada: <span id="selected-desk-text">-</span>
+                  </div>
+                </div>
+
+                <div
+                  id="no-desk-needed-state"
+                  class="hidden rounded-[28px] border border-blue-200 bg-blue-50 p-6"
+                >
+                  <h5 class="text-lg font-semibold text-slate-900">
+                    No necesitas seleccionar mesa
+                  </h5>
+                  <p class="mt-2 text-sm leading-6 text-slate-600">
+                    Has marcado teletrabajo o evento. Podrás guardar la jornada sin reservar un
+                    puesto físico.
+                  </p>
+                </div>
+
+                <div
+                  id="empty-state"
+                  class="flex min-h-[420px] items-center justify-center rounded-[28px] border border-dashed border-slate-300 bg-slate-50 p-8 text-center"
+                >
+                  <div class="max-w-md">
+                    <div class="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-2xl bg-white text-2xl shadow-sm">
+                      🗺️
+                    </div>
+                    <h5 class="text-lg font-semibold text-slate-900">Aún no hay plano cargado</h5>
+                    <p class="mt-2 text-sm leading-6 text-slate-500">
+                      Cuando elijas una oficina y una sala aparecerá aquí el mapa provisional con
+                      mesas disponibles y ocupadas.
+                    </p>
+                  </div>
+                </div>
+
+                <div id="map-wrapper" class="hidden">
+                  <div class="overflow-hidden rounded-[28px] border border-slate-200 bg-slate-50 p-4 sm:p-6">
+                    <div class="mb-4 flex flex-wrap items-center justify-between gap-3">
+                      <div class="rounded-2xl bg-white px-4 py-2 text-sm text-slate-600 shadow-sm">
+                        Plano provisional
+                      </div>
+                      <div class="rounded-2xl border border-slate-200 bg-white px-4 py-2 text-sm text-slate-600">
+                        Haz clic en una mesa disponible
+                      </div>
+                    </div>
+
+                    <div
+                      id="office-map"
+                      class="relative min-h-[420px] rounded-[24px] border border-slate-200 bg-gradient-to-br from-slate-100 to-white p-4 sm:min-h-[520px] sm:p-6"
+                    >
+                      <div class="absolute left-4 top-4 rounded-xl border border-slate-200 bg-white px-3 py-2 text-xs text-slate-600 sm:left-6 sm:top-6">
+                        Entrada
+                      </div>
+
+                      <div class="absolute right-4 top-4 rounded-xl border border-slate-200 bg-white px-3 py-2 text-xs text-slate-600 sm:right-6 sm:top-6">
+                        Ventanas
+                      </div>
+
+                      <div class="absolute left-1/2 top-6 h-14 w-32 -translate-x-1/2 rounded-2xl border border-slate-200 bg-slate-200/70"></div>
+
+                      <div class="absolute bottom-6 left-6 right-6 h-3 rounded-full bg-slate-200"></div>
+
+                      <div
+                        id="desks-grid"
+                        class="grid min-h-[360px] grid-cols-2 gap-4 pt-20 sm:grid-cols-3 lg:grid-cols-4"
+                      ></div>
+                    </div>
+                  </div>
+                </div>
+
+                <div class="mt-6 flex justify-end">
+                  <button
+                    id="reserve-btn"
+                    type="button"
+                    class="inline-flex items-center justify-center rounded-2xl bg-slate-900 px-5 py-3 text-sm font-semibold text-white transition hover:scale-[1.01] hover:bg-slate-800 disabled:cursor-not-allowed disabled:bg-slate-300 disabled:text-slate-500"
+                    disabled
+                  >
+                    Guardar jornada
+                  </button>
+                </div>
+              </section>
+            </div>
+          </div>
+
+          <div id="not-works-section" class="mt-8 hidden">
+            <div class="rounded-3xl border border-slate-200 bg-slate-50 p-5">
+              <div class="mb-5">
+                <h4 class="text-lg font-semibold text-slate-900">Motivo de ausencia</h4>
+                <p class="mt-1 text-sm text-slate-500">
+                  Indica por qué no trabajarás ese día.
+                </p>
+              </div>
+
+              <div class="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+                <button type="button" class="absence-option rounded-3xl border border-slate-200 bg-white p-4 text-left transition hover:border-blue-300 hover:bg-blue-50" data-value="Vacaciones">
+                  <div class="mb-3 text-2xl">🏖️</div>
+                  <div class="text-base font-semibold text-slate-900">Vacaciones</div>
+                  <div class="mt-1 text-sm text-slate-500">Ausencia por descanso programado.</div>
+                </button>
+
+                <button type="button" class="absence-option rounded-3xl border border-slate-200 bg-white p-4 text-left transition hover:border-blue-300 hover:bg-blue-50" data-value="Baja">
+                  <div class="mb-3 text-2xl">🩺</div>
+                  <div class="text-base font-semibold text-slate-900">Baja</div>
+                  <div class="mt-1 text-sm text-slate-500">No disponible por incapacidad temporal.</div>
+                </button>
+
+                <button type="button" class="absence-option rounded-3xl border border-slate-200 bg-white p-4 text-left transition hover:border-blue-300 hover:bg-blue-50" data-value="Asuntos propios">
+                  <div class="mb-3 text-2xl">📌</div>
+                  <div class="text-base font-semibold text-slate-900">Asuntos propios</div>
+                  <div class="mt-1 text-sm text-slate-500">Ausencia por motivo personal.</div>
+                </button>
+
+                <button type="button" class="absence-option rounded-3xl border border-slate-200 bg-white p-4 text-left transition hover:border-blue-300 hover:bg-blue-50" data-value="Permiso">
+                  <div class="mb-3 text-2xl">📝</div>
+                  <div class="text-base font-semibold text-slate-900">Permiso</div>
+                  <div class="mt-1 text-sm text-slate-500">Permiso o ausencia justificada.</div>
+                </button>
+              </div>
+
+              <div class="mt-6 flex justify-end">
+                <button
+                  id="save-absence-btn"
+                  type="button"
+                  class="inline-flex items-center justify-center rounded-2xl bg-slate-900 px-5 py-3 text-sm font-semibold text-white transition hover:bg-slate-800 disabled:cursor-not-allowed disabled:bg-slate-300 disabled:text-slate-500"
+                  disabled
+                >
+                  Guardar ausencia
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div
+      id="confirmation-modal"
+      class="pointer-events-none fixed inset-0 z-[60] flex items-center justify-center bg-slate-900/30 p-4 opacity-0 backdrop-blur-sm transition"
+    >
+      <div class="w-full max-w-md rounded-3xl border border-slate-200 bg-white p-6 shadow-2xl">
+        <div
+          id="confirmation-icon"
+          class="mb-4 flex h-14 w-14 items-center justify-center rounded-2xl text-2xl"
+        >
+          ✅
+        </div>
+
+        <h3 id="confirmation-title" class="text-xl font-semibold text-slate-900">
+          Operación completada
+        </h3>
+        <p id="confirmation-message" class="mt-3 text-sm leading-6 text-slate-600"></p>
+
+        <div class="mt-6 flex justify-end">
+          <button
+            id="close-confirmation-btn"
+            type="button"
+            class="rounded-2xl bg-slate-900 px-4 py-2 text-sm font-semibold text-white transition hover:bg-slate-800"
+          >
+            Cerrar
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <script>
+      const officeRooms = {
+        Toledo: ["Sala Principal", "Sala Norte", "Sala Reuniones", "Open Space"],
+        Madrid: ["Sala A", "Sala B", "Sala Dirección", "Sala Colaborativa"],
+        Alcobendas: ["Sala Atlas", "Sala Nexo", "Sala Focus"],
+        Consuegra: ["Sala Central", "Sala Archivo", "Sala Clientes"],
+      };
+
+      const officeDeskData = {
+        Toledo: [
+          { id: "T1", available: true },
+          { id: "T2", available: true },
+          { id: "T3", available: false },
+          { id: "T4", available: true },
+          { id: "T5", available: false },
+          { id: "T6", available: true },
+          { id: "T7", available: true },
+          { id: "T8", available: true },
+        ],
+        Madrid: [
+          { id: "M1", available: true },
+          { id: "M2", available: false },
+          { id: "M3", available: true },
+          { id: "M4", available: true },
+          { id: "M5", available: false },
+          { id: "M6", available: false },
+          { id: "M7", available: true },
+          { id: "M8", available: true },
+        ],
+        Alcobendas: [
+          { id: "A1", available: true },
+          { id: "A2", available: true },
+          { id: "A3", available: true },
+          { id: "A4", available: false },
+          { id: "A5", available: true },
+          { id: "A6", available: false },
+          { id: "A7", available: true },
+          { id: "A8", available: true },
+        ],
+        Consuegra: [
+          { id: "C1", available: false },
+          { id: "C2", available: true },
+          { id: "C3", available: true },
+          { id: "C4", available: true },
+          { id: "C5", available: false },
+          { id: "C6", available: true },
+          { id: "C7", available: true },
+          { id: "C8", available: false },
+        ],
+      };
+
+      const monthNames = [
+        "Enero",
+        "Febrero",
+        "Marzo",
+        "Abril",
+        "Mayo",
+        "Junio",
+        "Julio",
+        "Agosto",
+        "Septiembre",
+        "Octubre",
+        "Noviembre",
+        "Diciembre",
+      ];
+
+      const calendarGrid = document.getElementById("calendar-grid");
+      const calendarMonthLabel = document.getElementById("calendar-month-label");
+      const prevMonthBtn = document.getElementById("prev-month-btn");
+      const nextMonthBtn = document.getElementById("next-month-btn");
+
+      const selectedDateBadge = document.getElementById("selected-date-badge");
+      const selectedDateText = document.getElementById("selected-date-text");
+
+      const dayModal = document.getElementById("day-modal");
+      const closeDayModalBtn = document.getElementById("close-day-modal-btn");
+      const modalSelectedDate = document.getElementById("modal-selected-date");
+
+      const worksCard = document.getElementById("works-card");
+      const notWorksCard = document.getElementById("not-works-card");
+      const worksSection = document.getElementById("works-section");
+      const notWorksSection = document.getElementById("not-works-section");
+
+      const officeSelect = document.getElementById("office");
+      const roomSelect = document.getElementById("room");
+      const startTimeInput = document.getElementById("start-time");
+      const endTimeInput = document.getElementById("end-time");
+      const remoteCheckbox = document.getElementById("remote-checkbox");
+      const eventCheckbox = document.getElementById("event-checkbox");
+
+      const emptyState = document.getElementById("empty-state");
+      const mapWrapper = document.getElementById("map-wrapper");
+      const noDeskNeededState = document.getElementById("no-desk-needed-state");
+      const desksGrid = document.getElementById("desks-grid");
+      const mapSubtitle = document.getElementById("map-subtitle");
+
+      const reserveBtn = document.getElementById("reserve-btn");
+      const saveAbsenceBtn = document.getElementById("save-absence-btn");
+
+      const selectedDeskBadge = document.getElementById("selected-desk-badge");
+      const selectedDeskText = document.getElementById("selected-desk-text");
+
+      const confirmationModal = document.getElementById("confirmation-modal");
+      const confirmationIcon = document.getElementById("confirmation-icon");
+      const confirmationTitle = document.getElementById("confirmation-title");
+      const confirmationMessage = document.getElementById("confirmation-message");
+      const closeConfirmationBtn = document.getElementById("close-confirmation-btn");
+
+      const absenceOptions = document.querySelectorAll(".absence-option");
+      const statusCards = document.querySelectorAll(".status-card");
+
+      let selectedDesk = null;
+      let selectedDate = null;
+      let selectedStatus = null;
+      let selectedAbsenceReason = null;
+      let currentCalendarDate = new Date();
+
+      function formatDate(date) {
+        const year = date.getFullYear();
+        const month = String(date.getMonth() + 1).padStart(2, "0");
+        const day = String(date.getDate()).padStart(2, "0");
+        return `${year}-${month}-${day}`;
+      }
+
+      function formatHumanDate(dateString) {
+        const [year, month, day] = dateString.split("-");
+        return `${day}/${month}/${year}`;
+      }
+
+      function openDayModal() {
+        dayModal.classList.remove("pointer-events-none", "opacity-0");
+      }
+
+      function closeDayModal() {
+        dayModal.classList.add("pointer-events-none", "opacity-0");
+      }
+
+      function openConfirmation(success, message, title) {
+        confirmationTitle.textContent = title;
+        confirmationMessage.textContent = message;
+        confirmationIcon.textContent = success ? "✅" : "❌";
+        confirmationIcon.className = success
+          ? "mb-4 flex h-14 w-14 items-center justify-center rounded-2xl bg-emerald-100 text-2xl"
+          : "mb-4 flex h-14 w-14 items-center justify-center rounded-2xl bg-rose-100 text-2xl";
+
+        confirmationModal.classList.remove("pointer-events-none", "opacity-0");
+      }
+
+      function closeConfirmation() {
+        confirmationModal.classList.add("pointer-events-none", "opacity-0");
+      }
+
+      function resetModalState() {
+        selectedStatus = null;
+        selectedAbsenceReason = null;
+        selectedDesk = null;
+
+        statusCards.forEach((card) => {
+          card.classList.remove("border-blue-400", "bg-blue-50", "ring-2", "ring-blue-200");
+          card.classList.add("border-slate-200", "bg-white");
+        });
+
+        absenceOptions.forEach((option) => {
+          option.classList.remove("border-blue-400", "bg-blue-50", "ring-2", "ring-blue-200");
+          option.classList.add("border-slate-200", "bg-white");
+        });
+
+        worksSection.classList.add("hidden");
+        notWorksSection.classList.add("hidden");
+
+        officeSelect.value = "";
+        roomSelect.innerHTML = `<option value="">Primero elige una oficina</option>`;
+        roomSelect.disabled = true;
+        startTimeInput.value = "";
+        endTimeInput.value = "";
+        remoteCheckbox.checked = false;
+        eventCheckbox.checked = false;
+
+        selectedDeskBadge.classList.add("hidden");
+        selectedDeskText.textContent = "-";
+
+        mapWrapper.classList.add("hidden");
+        noDeskNeededState.classList.add("hidden");
+        emptyState.classList.remove("hidden");
+        mapSubtitle.textContent = "Selecciona una oficina y una sala para visualizar el plano.";
+
+        reserveBtn.disabled = true;
+        saveAbsenceBtn.disabled = true;
+      }
+
+      function renderCalendar() {
+        calendarGrid.innerHTML = "";
+
+        const year = currentCalendarDate.getFullYear();
+        const month = currentCalendarDate.getMonth();
+
+        calendarMonthLabel.textContent = `${monthNames[month]} ${year}`;
+
+        const firstDay = new Date(year, month, 1);
+        const lastDay = new Date(year, month + 1, 0);
+
+        let startWeekDay = firstDay.getDay();
+        startWeekDay = startWeekDay === 0 ? 6 : startWeekDay - 1;
+
+        const totalDays = lastDay.getDate();
+
+        for (let i = 0; i < startWeekDay; i++) {
+          const empty = document.createElement("div");
+          empty.className = "h-20 rounded-2xl";
+          calendarGrid.appendChild(empty);
+        }
+
+        const today = new Date();
+        const todayFormatted = formatDate(new Date(today.getFullYear(), today.getMonth(), today.getDate()));
+
+        for (let day = 1; day <= totalDays; day++) {
+          const date = new Date(year, month, day);
+          const dateValue = formatDate(date);
+          const isToday = dateValue === todayFormatted;
+          const isSelected = selectedDate === dateValue;
+
+          const button = document.createElement("button");
+          button.type = "button";
+          button.dataset.date = dateValue;
+          button.className = `
+            min-h-[86px] rounded-2xl border bg-white p-3 text-left transition
+            ${isSelected ? "border-blue-400 bg-blue-50 ring-2 ring-blue-200" : "border-slate-200 hover:border-slate-300 hover:bg-slate-50"}
+          `;
+
+          button.innerHTML = `
+            <div class="flex h-full flex-col justify-between">
+              <div class="flex items-start justify-between gap-2">
+                <span class="text-base font-semibold text-slate-900">${day}</span>
+                ${isToday ? '<span class="rounded-full bg-slate-900 px-2 py-1 text-[10px] font-semibold uppercase tracking-wide text-white">Hoy</span>' : ""}
+              </div>
+              <span class="text-xs text-slate-500">Gestionar jornada</span>
+            </div>
+          `;
+
+          button.addEventListener("click", () => {
+            selectedDate = dateValue;
+            selectedDateText.textContent = formatHumanDate(dateValue);
+            selectedDateBadge.classList.remove("hidden");
+            modalSelectedDate.textContent = `Fecha seleccionada: ${formatHumanDate(dateValue)}`;
+            renderCalendar();
+            resetModalState();
+            openDayModal();
+          });
+
+          calendarGrid.appendChild(button);
+        }
+      }
+
+      function populateRooms() {
+        const office = officeSelect.value;
+        roomSelect.innerHTML = "";
+
+        if (!office) {
+          roomSelect.disabled = true;
+          roomSelect.innerHTML = `<option value="">Primero elige una oficina</option>`;
+          renderMap();
+          return;
+        }
+
+        roomSelect.disabled = false;
+        roomSelect.innerHTML = `<option value="">Selecciona una sala</option>`;
+
+        officeRooms[office].forEach((room) => {
+          const option = document.createElement("option");
+          option.value = room;
+          option.textContent = room;
+          roomSelect.appendChild(option);
+        });
+
+        renderMap();
+      }
+
+      function getDeskCardClasses(available, isSelected) {
+        const base =
+          "desk group relative flex min-h-[92px] cursor-pointer items-center justify-center rounded-3xl border-2 text-sm font-semibold transition duration-200";
+
+        if (!available) {
+          return `${base} cursor-not-allowed border-rose-200 bg-rose-50 text-rose-700`;
+        }
+
+        if (isSelected) {
+          return `${base} border-blue-400 bg-blue-50 text-blue-700 shadow-md shadow-blue-100`;
+        }
+
+        return `${base} border-emerald-200 bg-emerald-50 text-emerald-700 hover:scale-[1.02] hover:border-emerald-300`;
+      }
+
+      function renderMap() {
+        const office = officeSelect.value;
+        const room = roomSelect.value;
+
+        selectedDesk = null;
+        selectedDeskBadge.classList.add("hidden");
+        selectedDeskText.textContent = "-";
+
+        const noDeskNeeded = remoteCheckbox.checked || eventCheckbox.checked;
+
+        if (noDeskNeeded) {
+          emptyState.classList.add("hidden");
+          mapWrapper.classList.add("hidden");
+          noDeskNeededState.classList.remove("hidden");
+          mapSubtitle.textContent = "No es necesario seleccionar una mesa.";
+          validateReserveButton();
+          return;
+        }
+
+        noDeskNeededState.classList.add("hidden");
+
+        if (!office || !room) {
+          emptyState.classList.remove("hidden");
+          mapWrapper.classList.add("hidden");
+          mapSubtitle.textContent = "Selecciona una oficina y una sala para visualizar el plano.";
+          validateReserveButton();
+          return;
+        }
+
+        emptyState.classList.add("hidden");
+        mapWrapper.classList.remove("hidden");
+        mapSubtitle.textContent = `${office} · ${room}`;
+
+        desksGrid.innerHTML = "";
+
+        const desks = officeDeskData[office] || [];
+
+        desks.forEach((desk) => {
+          const deskButton = document.createElement("button");
+          deskButton.type = "button";
+          deskButton.dataset.deskId = desk.id;
+          deskButton.dataset.available = desk.available ? "true" : "false";
+          deskButton.className = getDeskCardClasses(desk.available, false);
+
+          deskButton.innerHTML = `
+            <div class="flex flex-col items-center justify-center gap-2">
+              <span class="text-base">${desk.id}</span>
+              <span class="rounded-full px-2 py-1 text-[11px] font-medium ${
+                desk.available
+                  ? "bg-emerald-100 text-emerald-700"
+                  : "bg-rose-100 text-rose-700"
+              }">
+                ${desk.available ? "Disponible" : "Ocupada"}
+              </span>
+            </div>
+          `;
+
+          deskButton.addEventListener("click", () => {
+            if (!desk.available) return;
+
+            selectedDesk = desk.id;
+
+            [...desksGrid.querySelectorAll(".desk")].forEach((el) => {
+              const isAvailable = el.dataset.available === "true";
+              const isSelected = el.dataset.deskId === selectedDesk;
+              el.className = getDeskCardClasses(isAvailable, isSelected);
+            });
+
+            selectedDeskText.textContent = selectedDesk;
+            selectedDeskBadge.classList.remove("hidden");
+            validateReserveButton();
+          });
+
+          desksGrid.appendChild(deskButton);
+        });
+
+        validateReserveButton();
+      }
+
+      function selectStatus(status) {
+        selectedStatus = status;
+
+        statusCards.forEach((card) => {
+          const isActive = card.dataset.status === status;
+
+          card.classList.toggle("border-blue-400", isActive);
+          card.classList.toggle("bg-blue-50", isActive);
+          card.classList.toggle("ring-2", isActive);
+          card.classList.toggle("ring-blue-200", isActive);
+
+          if (isActive) {
+            card.classList.remove("border-slate-200", "bg-white");
+          } else {
+            card.classList.add("border-slate-200", "bg-white");
+          }
+        });
+
+        worksSection.classList.toggle("hidden", status !== "works");
+        notWorksSection.classList.toggle("hidden", status !== "not-works");
+
+        validateReserveButton();
+      }
+
+      function selectAbsenceReason(value) {
+        selectedAbsenceReason = value;
+
+        absenceOptions.forEach((option) => {
+          const isActive = option.dataset.value === value;
+
+          option.classList.toggle("border-blue-400", isActive);
+          option.classList.toggle("bg-blue-50", isActive);
+          option.classList.toggle("ring-2", isActive);
+          option.classList.toggle("ring-blue-200", isActive);
+
+          if (isActive) {
+            option.classList.remove("border-slate-200", "bg-white");
+          } else {
+            option.classList.add("border-slate-200", "bg-white");
+          }
+        });
+
+        saveAbsenceBtn.disabled = !selectedAbsenceReason;
+      }
+
+      function validateReserveButton() {
+        if (selectedStatus !== "works") {
+          reserveBtn.disabled = true;
+          return;
+        }
+
+        const hasBasicFields =
+          selectedDate &&
+          officeSelect.value &&
+          roomSelect.value &&
+          startTimeInput.value &&
+          endTimeInput.value;
+
+        const noDeskNeeded = remoteCheckbox.checked || eventCheckbox.checked;
+
+        if (!hasBasicFields) {
+          reserveBtn.disabled = true;
+          return;
+        }
+
+        if (noDeskNeeded) {
+          reserveBtn.disabled = false;
+          return;
+        }
+
+        reserveBtn.disabled = !selectedDesk;
+      }
+
+      worksCard.addEventListener("click", () => selectStatus("works"));
+      notWorksCard.addEventListener("click", () => selectStatus("not-works"));
+
+      officeSelect.addEventListener("change", () => {
+        populateRooms();
+        validateReserveButton();
+      });
+
+      roomSelect.addEventListener("change", () => {
+        renderMap();
+        validateReserveButton();
+      });
+
+      startTimeInput.addEventListener("change", validateReserveButton);
+      endTimeInput.addEventListener("change", validateReserveButton);
+
+      remoteCheckbox.addEventListener("change", () => {
+        if (remoteCheckbox.checked) {
+          eventCheckbox.checked = false;
+        }
+        renderMap();
+        validateReserveButton();
+      });
+
+      eventCheckbox.addEventListener("change", () => {
+        if (eventCheckbox.checked) {
+          remoteCheckbox.checked = false;
+        }
+        renderMap();
+        validateReserveButton();
+      });
+
+      absenceOptions.forEach((option) => {
+        option.addEventListener("click", () => {
+          selectAbsenceReason(option.dataset.value);
+        });
+      });
+
+      reserveBtn.addEventListener("click", () => {
+        if (!selectedDate) {
+          openConfirmation(false, "No hay una fecha seleccionada.", "No se pudo completar");
+          return;
+        }
+
+        if (!officeSelect.value || !roomSelect.value || !startTimeInput.value || !endTimeInput.value) {
+          openConfirmation(false, "Faltan campos por completar.", "No se pudo completar");
+          return;
+        }
+
+        if (startTimeInput.value >= endTimeInput.value) {
+          openConfirmation(
+            false,
+            "La hora de fin debe ser posterior a la hora de inicio.",
+            "No se pudo completar"
+          );
+          return;
+        }
+
+        const noDeskNeeded = remoteCheckbox.checked || eventCheckbox.checked;
+
+        if (!noDeskNeeded && !selectedDesk) {
+          openConfirmation(
+            false,
+            "Debes seleccionar una mesa o marcar teletrabajo/evento.",
+            "No se pudo completar"
+          );
+          return;
+        }
+
+        const mode = remoteCheckbox.checked
+          ? "teletrabajo"
+          : eventCheckbox.checked
+            ? "evento"
+            : `mesa ${selectedDesk}`;
+
+        openConfirmation(
+          true,
+          `La jornada del día ${formatHumanDate(selectedDate)} se ha guardado correctamente en ${officeSelect.value}, sala ${roomSelect.value}, desde las ${startTimeInput.value} hasta las ${endTimeInput.value}, con asignación: ${mode}.`,
+          "Jornada guardada"
+        );
+      });
+
+      saveAbsenceBtn.addEventListener("click", () => {
+        if (!selectedDate || !selectedAbsenceReason) {
+          openConfirmation(false, "Debes seleccionar un motivo de ausencia.", "No se pudo completar");
+          return;
+        }
+
+        openConfirmation(
+          true,
+          `La ausencia del día ${formatHumanDate(selectedDate)} se ha registrado correctamente con el motivo: ${selectedAbsenceReason}.`,
+          "Ausencia guardada"
+        );
+      });
+
+      prevMonthBtn.addEventListener("click", () => {
+        currentCalendarDate = new Date(
+          currentCalendarDate.getFullYear(),
+          currentCalendarDate.getMonth() - 1,
+          1
+        );
+        renderCalendar();
+      });
+
+      nextMonthBtn.addEventListener("click", () => {
+        currentCalendarDate = new Date(
+          currentCalendarDate.getFullYear(),
+          currentCalendarDate.getMonth() + 1,
+          1
+        );
+        renderCalendar();
+      });
+
+      closeDayModalBtn.addEventListener("click", closeDayModal);
+      dayModal.addEventListener("click", (e) => {
+        if (e.target === dayModal) closeDayModal();
+      });
+
+      closeConfirmationBtn.addEventListener("click", closeConfirmation);
+      confirmationModal.addEventListener("click", (e) => {
+        if (e.target === confirmationModal) closeConfirmation();
+      });
+
+      renderCalendar();
+    </script>
+  </main>
+</Layout>
