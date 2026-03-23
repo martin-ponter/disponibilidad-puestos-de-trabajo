@@ -1,0 +1,36 @@
+---
+import type { Centro } from '../types/reservas';
+
+interface Props {
+  centros: Centro[];
+  centroActivoId: string;
+}
+
+const { centros, centroActivoId } = Astro.props;
+const centroActivo = centros.find((centro) => centro.id === centroActivoId) ?? centros[0];
+---
+
+<section class="panel">
+  <div class="panel__header">
+    <div>
+      <p class="eyebrow">Centro</p>
+      <h2>Oficina activa</h2>
+    </div>
+  </div>
+
+  <label class="field">
+    <span>Centro de trabajo</span>
+    <select data-centro-selector>
+      {centros.map((centro) => (
+        <option value={centro.id} selected={centro.id === centroActivoId}>
+          {centro.nombre}
+        </option>
+      ))}
+    </select>
+  </label>
+
+  <div class="panel__meta" data-centro-meta>
+    <strong>{centroActivo.nombre}</strong>
+    <span>{centroActivo.direccion}</span>
+  </div>
+</section>

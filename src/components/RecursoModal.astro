@@ -1,0 +1,83 @@
+---
+interface Props {
+  fechaSeleccionada: string;
+}
+
+const { fechaSeleccionada } = Astro.props;
+---
+
+<dialog class="booking-dialog" data-booking-modal>
+  <form class="booking-form" data-booking-form>
+    <div class="booking-form__header">
+      <div>
+        <p class="eyebrow">Nueva reserva</p>
+        <h2 data-modal-title>Selecciona un recurso</h2>
+      </div>
+
+      <button type="button" class="ghost-button" data-modal-close aria-label="Cerrar">
+        x
+      </button>
+    </div>
+
+    <div class="booking-form__summary">
+      <strong data-modal-resource>Recurso pendiente</strong>
+      <span data-modal-context>Centro y sala pendientes</span>
+    </div>
+
+    <div class="booking-form__grid">
+      <label class="field">
+        <span>Empleado asignado</span>
+        <select name="empleadoId" data-input-empleado-id required></select>
+      </label>
+
+      <label class="field">
+        <span>Nombre empleado</span>
+        <input type="text" name="empleadoNombre" value="Usuario actual" data-input-empleado readonly />
+      </label>
+
+      <label class="field">
+        <span>Fecha</span>
+        <input type="date" name="fecha" value={fechaSeleccionada} data-input-fecha required />
+      </label>
+
+      <label class="field">
+        <span>Hora inicio</span>
+        <input type="time" name="horaInicio" value="09:00" data-input-hora-inicio required />
+      </label>
+
+      <label class="field">
+        <span>Hora fin</span>
+        <input type="time" name="horaFin" value="18:00" data-input-hora-fin required />
+      </label>
+
+      <label class="field field--full">
+        <span>Observaciones</span>
+        <textarea name="observaciones" rows="4" placeholder="Contexto adicional para la reserva"></textarea>
+      </label>
+    </div>
+
+    <p class="form-error" data-form-error hidden></p>
+
+    <input type="hidden" name="centroId" data-input-centro />
+    <input type="hidden" name="salaId" data-input-sala />
+    <input type="hidden" name="recursoId" data-input-recurso />
+    <input type="hidden" name="tipoRecurso" data-input-tipo />
+    <input type="hidden" name="modoReserva" data-input-modo />
+    <input type="hidden" name="estado" value="pendiente" />
+
+    <div class="booking-form__footer">
+      <p class="form-note" data-permissions-note>
+        Los usuarios normales solo pueden reservar para si mismos.
+      </p>
+
+      <div class="booking-form__actions">
+        <button type="button" class="ghost-button" data-modal-close>
+          Cancelar
+        </button>
+        <button type="submit" class="primary-button">
+          Guardar reserva
+        </button>
+      </div>
+    </div>
+  </form>
+</dialog>

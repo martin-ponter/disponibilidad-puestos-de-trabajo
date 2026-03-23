@@ -1,11 +1,56 @@
 ---
-import Welcome from '../components/Welcome.astro';
 import Layout from '../layouts/Layout.astro';
+import Calendario from '../components/Calendario.astro';
+import CentroSelector from '../components/CentroSelector.astro';
+import RecursoModal from '../components/RecursoModal.astro';
+import SalaViewer from '../components/SalaViewer.astro';
+import { CENTROS } from '../data/oficinas';
+import { formatDateLong, toIsoDate } from '../utils/fechas';
 
-// Welcome to Astro! Wondering what to do next? Check out the Astro documentation at https://docs.astro.build
-// Don't want to use any of this? Delete everything in this file, the `assets`, `components`, and `layouts` directories, and start fresh.
+const fechaSeleccionada = toIsoDate(new Date());
+const centroActivo = CENTROS[0];
+const salaActiva = centroActivo.salas[0];
 ---
 
-<Layout>
-	<Welcome />
+<Layout title="Reservas de Puestos | Bitrix24">
+  <main class="app-shell" data-reservas-app>
+    <aside class="sidebar">
+      <CentroSelector centros={CENTROS} centroActivoId={centroActivo.id} />
+      <Calendario fechaSeleccionada={fechaSeleccionada} />
+    </aside>
+
+    <section class="workspace">
+      <section class="hero">
+        <p class="hero__eyebrow">Bitrix24 local app</p>
+        <h1>Reservas de puestos y salas</h1>
+        <p>
+          Base inicial para una app embebida en Bitrix24 con selector de centro, calendario,
+          mapa de recursos y modal unificada para reservas.
+        </p>
+        <p class="hero__message" data-app-message data-status="info">
+          Origen de datos: Modo local.
+        </p>
+        <div class="hero__chips">
+          <span class="chip" data-hero-centro>{centroActivo.nombre}</span>
+          <span class="chip" data-hero-fecha>{formatDateLong(fechaSeleccionada)}</span>
+          <span class="chip" data-hero-sala>{salaActiva.nombre}</span>
+          <span class="chip" data-hero-count>0 reservas del dia</span>
+        </div>
+      </section>
+
+      <SalaViewer
+        salas={centroActivo.salas}
+        salaActivaId={salaActiva.id}
+        fechaSeleccionada={fechaSeleccionada}
+      />
+    </section>
+
+    <RecursoModal fechaSeleccionada={fechaSeleccionada} />
+  </main>
+
+  <script>
+    import { mountApp } from '../scripts/app';
+
+    mountApp();
+  </script>
 </Layout>

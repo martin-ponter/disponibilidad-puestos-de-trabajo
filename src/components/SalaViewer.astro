@@ -1,0 +1,89 @@
+---
+import type { Sala } from '../types/reservas';
+
+interface Props {
+  salas: Sala[];
+  salaActivaId: string;
+  fechaSeleccionada: string;
+}
+
+const { salas, salaActivaId, fechaSeleccionada } = Astro.props;
+const salaActiva = salas.find((sala) => sala.id === salaActivaId) ?? salas[0];
+---
+
+<section class="panel panel--viewer">
+  <div class="panel__header panel__header--wide">
+    <div>
+      <p class="eyebrow">Mapa de sala</p>
+      <h2>Recursos y ocupacion</h2>
+    </div>
+
+    <div class="panel__status">
+      <span class="badge" data-room-date>{fechaSeleccionada}</span>
+      <span class="badge badge--soft" data-bitrix-status>Modo local</span>
+    </div>
+  </div>
+
+  <div class="viewer__toolbar">
+    <label class="field viewer__field">
+      <span>Sala o zona</span>
+      <div class="viewer__room-picker">
+        <button type="button" class="ghost-button" data-sala-prev aria-label="Sala anterior">
+          &larr;
+        </button>
+
+        <select data-sala-selector>
+          {salas.map((sala) => (
+            <option value={sala.id} selected={sala.id === salaActivaId}>
+              {sala.nombre}
+            </option>
+          ))}
+        </select>
+
+        <button type="button" class="ghost-button" data-sala-next aria-label="Sala siguiente">
+          &rarr;
+        </button>
+      </div>
+    </label>
+
+    <div class="viewer__meta" data-sala-meta>
+      <strong>{salaActiva.nombre}</strong>
+      <span>{salaActiva.planta} | {salaActiva.descripcion}</span>
+    </div>
+  </div>
+
+  <div class="viewer__stage">
+    <div
+      class="room-map"
+      data-room-map
+      style={`background:${salaActiva.mapa.fondo}; aspect-ratio:${salaActiva.mapa.width} / ${salaActiva.mapa.height};`}
+    >
+      {salaActiva.recursos.map((recurso) => (
+        <button
+          type="button"
+          class:list={[
+            'resource',
+            recurso.tipo === 'sala' ? 'resource--room' : 'resource--desk',
+          ]}
+          style={`left:${recurso.posicion.x}%; top:${recurso.posicion.y}%; width:${recurso.posicion.width}%; height:${recurso.posicion.height}%;`}
+          data-resource-id={recurso.id}
+          data-resource-name={recurso.nombre}
+          aria-label={`Reservar ${recurso.nombre}`}
+        >
+          <span>{recurso.codigo}</span>
+        </button>
+      ))}
+    </div>
+  </div>
+
+  <div class="viewer__resource-meta" data-resource-panel>
+    <strong>Pulsa un recurso para reservar</strong>
+    <span>Los puestos y salas siguen el mismo flujo de reserva.</span>
+  </div>
+
+  <div class="viewer__legend">
+    <span><i class="legend legend--desk"></i> Puesto individual</span>
+    <span><i class="legend legend--room"></i> Sala completa</span>
+    <span><i class="legend legend--busy"></i> Recurso con reservas ese dia</span>
+  </div>
+</section>
