@@ -1,4 +1,4 @@
-import { officeDeskData } from "../../../../data/adminReservations";
+import { officeDeskData } from "../../data/adminReservations";
 
 function getDeskCardClasses(availability, isSelected) {
   const base =

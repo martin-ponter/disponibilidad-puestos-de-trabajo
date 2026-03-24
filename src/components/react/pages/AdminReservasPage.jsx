@@ -9,7 +9,7 @@ import {
   initialReservations,
   officeDeskData,
   officeRooms,
-} from "../../../data/adminReservations";
+} from "../data/adminReservations";
 
 function formatHumanDate(dateString) {
   const [year, month, day] = dateString.split("-");

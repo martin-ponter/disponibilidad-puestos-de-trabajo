@@ -1,4 +1,4 @@
-import { officeDeskData, officeRooms } from "../../../../data/adminReservations";
+import { officeDeskData, officeRooms } from "../../data/adminReservations";
 
 export default function AdminDrawer({
   selectedReservation,
