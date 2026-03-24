@@ -1,23 +1,17 @@
 import React, { useEffect, useMemo, useState } from "react";
+import { officeMaps } from "../../../../data/office-maps";
+import OfficeMapReact from "./OfficeMapReact.jsx";
 
 const OFFICE_ROOMS = {
-	Toledo: ["Sala Principal", "Sala Norte", "Sala Reuniones", "Open Space"],
+	Toledo: Object.values(officeMaps)
+		.filter((map) => map.office === "Toledo")
+		.map((map) => map.room),
 	Madrid: ["Sala A", "Sala B", "Sala Dirección", "Sala Colaborativa"],
 	Alcobendas: ["Sala Atlas", "Sala Nexo", "Sala Focus"],
 	"Mancha Centro": ["Sala Central", "Sala Archivo", "Sala Clientes"],
 };
 
 const OFFICE_DESK_DATA = {
-	Toledo: [
-		{ id: "T1", available: true },
-		{ id: "T2", available: true },
-		{ id: "T3", available: false },
-		{ id: "T4", available: true },
-		{ id: "T5", available: false },
-		{ id: "T6", available: true },
-		{ id: "T7", available: true },
-		{ id: "T8", available: true },
-	],
 	Madrid: [
 		{ id: "M1", available: true },
 		{ id: "M2", available: false },
@@ -101,21 +95,6 @@ function inferMode(entry) {
 	}
 
 	return "office";
-}
-
-function getDeskCardClasses(available, isSelected) {
-	const base =
-		"group relative flex min-h-[92px] cursor-pointer items-center justify-center rounded-3xl border-2 text-sm font-semibold transition duration-200";
-
-	if (!available) {
-		return `${base} cursor-not-allowed border-rose-200 bg-rose-50 text-rose-700`;
-	}
-
-	if (isSelected) {
-		return `${base} border-blue-400 bg-blue-50 text-blue-700 shadow-md shadow-blue-100`;
-	}
-
-	return `${base} border-emerald-200 bg-emerald-50 text-emerald-700 hover:scale-[1.02] hover:border-emerald-300`;
 }
 
 export default function ReservationDayModal({
@@ -263,10 +242,11 @@ export default function ReservationDayModal({
 						<button
 							type="button"
 							onClick={() => setWorkStatus("works")}
-							className={`rounded-3xl border p-5 text-left shadow-sm transition ${workStatus === "works"
-								? "border-blue-400 bg-blue-50 ring-2 ring-blue-200"
-								: "border-slate-200 bg-white hover:border-blue-300 hover:bg-blue-50"
-								}`}
+							className={`rounded-3xl border p-5 text-left shadow-sm transition ${
+								workStatus === "works"
+									? "border-blue-400 bg-blue-50 ring-2 ring-blue-200"
+									: "border-slate-200 bg-white hover:border-blue-300 hover:bg-blue-50"
+							}`}
 						>
 							<div className="mb-4 flex h-12 w-12 items-center justify-center rounded-2xl bg-emerald-50 text-2xl">
 								💼
@@ -280,17 +260,18 @@ export default function ReservationDayModal({
 						<button
 							type="button"
 							onClick={() => setWorkStatus("not-works")}
-							className={`rounded-3xl border p-5 text-left shadow-sm transition ${workStatus === "not-works"
-								? "border-blue-400 bg-blue-50 ring-2 ring-blue-200"
-								: "border-slate-200 bg-white hover:border-blue-300 hover:bg-blue-50"
-								}`}
+							className={`rounded-3xl border p-5 text-left shadow-sm transition ${
+								workStatus === "not-works"
+									? "border-blue-400 bg-blue-50 ring-2 ring-blue-200"
+									: "border-slate-200 bg-white hover:border-blue-300 hover:bg-blue-50"
+							}`}
 						>
 							<div className="mb-4 flex h-12 w-12 items-center justify-center rounded-2xl bg-amber-50 text-2xl">
 								🌴
 							</div>
 							<h5 className="text-lg font-semibold text-slate-900">No trabaja</h5>
 							<p className="mt-2 text-sm leading-6 text-slate-600">
-								Ese día no trabajaré. Podrás indicar el motivo más adelante.
+								Ese día no trabajaré. Se registrará simplemente como no trabaja.
 							</p>
 						</button>
 					</div>
@@ -425,6 +406,27 @@ export default function ReservationDayModal({
 											</div>
 										</label>
 									</div>
+
+									<div className="rounded-2xl border border-slate-200 bg-white p-4">
+										<div className="mb-3 flex items-center justify-between">
+											<span className="text-sm font-medium text-slate-700">Estado de las mesas</span>
+										</div>
+
+										<div className="grid grid-cols-1 gap-3 text-sm text-slate-600 sm:grid-cols-3">
+											<div className="flex items-center gap-2">
+												<span className="h-3 w-3 rounded-full bg-emerald-400"></span>
+												Disponible
+											</div>
+											<div className="flex items-center gap-2">
+												<span className="h-3 w-3 rounded-full bg-rose-400"></span>
+												No disponible
+											</div>
+											<div className="flex items-center gap-2">
+												<span className="h-3 w-3 rounded-full bg-blue-400"></span>
+												Seleccionada
+											</div>
+										</div>
+									</div>
 								</div>
 							</aside>
 
@@ -464,7 +466,8 @@ export default function ReservationDayModal({
 											</div>
 											<h5 className="text-lg font-semibold text-slate-900">Aún no hay plano cargado</h5>
 											<p className="mt-2 text-sm leading-6 text-slate-500">
-												Cuando elijas una oficina y una sala aparecerá aquí el mapa provisional.
+												Cuando elijas una oficina y una sala aparecerá aquí el mapa real o el
+												plano provisional.
 											</p>
 										</div>
 									</div>
@@ -472,52 +475,20 @@ export default function ReservationDayModal({
 									<div className="overflow-hidden rounded-[28px] border border-slate-200 bg-slate-50 p-4 sm:p-6">
 										<div className="mb-4 flex flex-wrap items-center justify-between gap-3">
 											<div className="rounded-2xl bg-white px-4 py-2 text-sm text-slate-600 shadow-sm">
-												Plano provisional
+												Plano de ocupación
 											</div>
 											<div className="rounded-2xl border border-slate-200 bg-white px-4 py-2 text-sm text-slate-600">
 												Haz clic en una mesa disponible
 											</div>
 										</div>
 
-										<div className="relative min-h-[420px] rounded-[24px] border border-slate-200 bg-gradient-to-br from-slate-100 to-white p-4 sm:min-h-[520px] sm:p-6">
-											<div className="absolute left-4 top-4 rounded-xl border border-slate-200 bg-white px-3 py-2 text-xs text-slate-600 sm:left-6 sm:top-6">
-												Entrada
-											</div>
-
-											<div className="absolute right-4 top-4 rounded-xl border border-slate-200 bg-white px-3 py-2 text-xs text-slate-600 sm:right-6 sm:top-6">
-												Ventanas
-											</div>
-
-											<div className="absolute left-1/2 top-6 h-14 w-32 -translate-x-1/2 rounded-2xl border border-slate-200 bg-slate-200/70"></div>
-											<div className="absolute bottom-6 left-6 right-6 h-3 rounded-full bg-slate-200"></div>
-
-											<div className="grid min-h-[360px] grid-cols-2 gap-4 pt-20 sm:grid-cols-3 lg:grid-cols-4">
-												{deskOptions.map((desk) => (
-													<button
-														key={desk.id}
-														type="button"
-														disabled={!desk.available}
-														onClick={() => {
-															if (!desk.available) return;
-															setSelectedDesk(desk.id);
-														}}
-														className={getDeskCardClasses(desk.available, selectedDesk === desk.id)}
-													>
-														<div className="flex flex-col items-center justify-center gap-2">
-															<span className="text-base">{desk.id}</span>
-															<span
-																className={`rounded-full px-2 py-1 text-[11px] font-medium ${desk.available
-																	? "bg-emerald-100 text-emerald-700"
-																	: "bg-rose-100 text-rose-700"
-																	}`}
-															>
-																{desk.available ? "Disponible" : "Ocupada"}
-															</span>
-														</div>
-													</button>
-												))}
-											</div>
-										</div>
+										<OfficeMapReact
+											office={office}
+											room={room}
+											genericDeskData={deskOptions}
+											selectedDesk={selectedDesk}
+											onSelectDesk={setSelectedDesk}
+										/>
 									</div>
 								)}
 
