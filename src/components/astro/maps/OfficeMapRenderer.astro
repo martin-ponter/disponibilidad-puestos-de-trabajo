@@ -1,0 +1,148 @@
+---
+import type {
+  OfficeMapDefinition,
+  OfficeMapFeature,
+  OfficeMapDesk,
+} from "../../../data/office-maps";
+
+interface DeskState {
+  available?: boolean;
+  occupied?: boolean;
+  employeeName?: string;
+}
+
+interface Props {
+  map: OfficeMapDefinition;
+  deskStates?: Record<string, DeskState>;
+  selectedDeskId?: string | null;
+  mode?: "employee" | "admin";
+}
+
+const {
+  map,
+  deskStates = {},
+  selectedDeskId = null,
+  mode = "employee",
+} = Astro.props;
+
+function pct(value: number, total: number) {
+  return `${(value / total) * 100}%`;
+}
+
+function getDeskClasses(deskId: string) {
+  const state = deskStates[deskId] ?? {};
+  const isSelected = selectedDeskId === deskId;
+
+  const base =
+    "absolute flex items-center justify-center border text-[10px] sm:text-xs font-semibold transition rounded-2xl";
+
+  if (isSelected) {
+    return `${base} border-blue-500 bg-blue-50 text-blue-700 shadow-md shadow-blue-100`;
+  }
+
+  if (mode === "admin" && state.occupied) {
+    return `${base} border-sky-300 bg-sky-50 text-sky-700 hover:border-sky-400`;
+  }
+
+  if (state.available === false) {
+    return `${base} border-rose-200 bg-rose-50 text-rose-700`;
+  }
+
+  return `${base} border-emerald-200 bg-emerald-50 text-emerald-700`;
+}
+
+function getFeatureClasses(feature: OfficeMapFeature) {
+  switch (feature.type) {
+    case "rect":
+      return `absolute border border-slate-300 bg-transparent ${
+        feature.rounded ? "rounded-[24px]" : ""
+      }`;
+    case "line":
+      return "absolute bg-slate-300";
+    case "label":
+      return "absolute flex items-center justify-center text-[10px] sm:text-xs font-semibold tracking-wide text-slate-500";
+    case "door":
+      return "hidden";
+    default:
+      return "";
+  }
+}
+---
+
+<div class="mx-auto flex w-full justify-center">
+  <div
+    class="relative w-full max-w-[720px] overflow-hidden rounded-[24px] border border-slate-200 bg-gradient-to-br from-slate-100 to-white"
+    style={`
+      aspect-ratio: ${map.width} / ${map.height};
+      max-height: calc(100vh - 220px);
+    `}
+  >
+    {map.features.map((feature) => (
+      <>
+        {feature.type === "label" && (
+          <div
+            class={getFeatureClasses(feature)}
+            style={`
+              left:${pct(feature.x, map.width)};
+              top:${pct(feature.y, map.height)};
+              width:${pct(feature.w, map.width)};
+              height:${pct(feature.h, map.height)};
+            `}
+          >
+            {feature.text}
+          </div>
+        )}
+
+        {feature.type === "rect" && (
+          <div
+            class={getFeatureClasses(feature)}
+            style={`
+              left:${pct(feature.x, map.width)};
+              top:${pct(feature.y, map.height)};
+              width:${pct(feature.w, map.width)};
+              height:${pct(feature.h, map.height)};
+            `}
+          />
+        )}
+
+        {feature.type === "line" && (
+          <div
+            class={getFeatureClasses(feature)}
+            style={`
+              left:${pct(feature.x, map.width)};
+              top:${pct(feature.y, map.height)};
+              width:${pct(feature.w, map.width)};
+              height:${pct(feature.h, map.height)};
+            `}
+          />
+        )}
+      </>
+    ))}
+
+    {map.desks.map((desk: OfficeMapDesk) => {
+      const state = deskStates[desk.id] ?? {};
+      return (
+        <button
+          type="button"
+          data-desk-id={desk.id}
+          class={getDeskClasses(desk.id)}
+          style={`
+            left:${pct(desk.x, map.width)};
+            top:${pct(desk.y, map.height)};
+            width:${pct(desk.w, map.width)};
+            height:${pct(desk.h, map.height)};
+          `}
+        >
+          <div class="flex flex-col items-center justify-center px-1 text-center leading-tight">
+            <span>{desk.id}</span>
+            {mode === "admin" && state.employeeName && (
+              <span class="mt-1 line-clamp-2 text-[9px] font-medium text-slate-500 sm:text-[10px]">
+                {state.employeeName}
+              </span>
+            )}
+          </div>
+        </button>
+      );
+    })}
+  </div>
+</div>
