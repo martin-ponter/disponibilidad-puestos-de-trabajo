@@ -64,41 +64,42 @@ export default function Cards() {
 			return;
 		}
 
+		let isCancelled = false;
+
 		window.BX24.init(() => {
 			const allUsers = [];
 
-			function loadPage(start = 0) {
-				console.log("Cargando página con start =", start);
+			const handlePage = (result) => {
+				if (isCancelled) return;
 
-				window.BX24.callMethod("user.get", { start }, (result) => {
-					if (result.error()) {
-						console.error("Error Bitrix:", result.error());
-						setError(
-							result.error().ex ||
-								result.error().description ||
-								"Error al obtener usuarios de Bitrix."
-						);
-						setLoading(false);
-						return;
-					}
+				if (result.error()) {
+					setError(
+						result.error().ex ||
+							result.error().description ||
+							"Error al obtener usuarios de Bitrix."
+					);
+					setLoading(false);
+					return;
+				}
 
-					const pageData = result.data() || [];
-					console.log("Usuarios recibidos:", pageData.length);
+				const pageData = result.data() || [];
+				allUsers.push(...pageData);
 
-					allUsers.push(...pageData);
+				if (result.more()) {
+					result.next(handlePage);
+					return;
+				}
 
-					if (pageData.length < 50) {
-						setUsers(allUsers);
-						setLoading(false);
-						return;
-					}
+				setUsers(allUsers);
+				setLoading(false);
+			};
 
-					loadPage(start + 50);
-				});
-			}
-
-			loadPage(0);
+			window.BX24.callMethod("user.get", {}, handlePage);
 		});
+
+		return () => {
+			isCancelled = true;
+		};
 	}, []);
 
 	if (loading) {
