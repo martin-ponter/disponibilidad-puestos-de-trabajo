@@ -64,15 +64,16 @@ export default function Cards() {
 			return;
 		}
 
-		let isCancelled = false;
+		let cancelled = false;
+		let allUsers = [];
+		let expectedTotal = null;
 
 		window.BX24.init(() => {
-			const allUsers = [];
-
-			const handlePage = (result) => {
-				if (isCancelled) return;
+			window.BX24.callMethod("user.get", {}, function handleResult(result) {
+				if (cancelled) return;
 
 				if (result.error()) {
+					console.error(result.error());
 					setError(
 						result.error().ex ||
 							result.error().description ||
@@ -83,22 +84,29 @@ export default function Cards() {
 				}
 
 				const pageData = result.data() || [];
-				allUsers.push(...pageData);
+				allUsers = allUsers.concat(pageData);
+
+				if (typeof result.total === "function") {
+					expectedTotal = result.total();
+				}
+
+				console.log("Página:", pageData.length);
+				console.log("Acumulados:", allUsers.length);
+				console.log("Total esperado:", expectedTotal);
+				console.log("Hay más:", result.more());
 
 				if (result.more()) {
-					result.next(handlePage);
+					result.next();
 					return;
 				}
 
 				setUsers(allUsers);
 				setLoading(false);
-			};
-
-			window.BX24.callMethod("user.get", {}, handlePage);
+			});
 		});
 
 		return () => {
-			isCancelled = true;
+			cancelled = true;
 		};
 	}, []);
 
@@ -155,10 +163,16 @@ export default function Cards() {
 	}
 
 	return (
-		<div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
-			{users.map((user) => (
-				<UserCard key={user.ID} user={user} />
-			))}
-		</div>
+		<>
+			<div className="mb-4 rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-700">
+				Usuarios cargados: <span className="font-semibold">{users.length}</span>
+			</div>
+
+			<div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
+				{users.map((user) => (
+					<UserCard key={user.ID} user={user} />
+				))}
+			</div>
+		</>
 	);
 }
