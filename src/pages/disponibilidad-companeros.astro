@@ -1,12 +1,16 @@
 ---
 import Layout from "../layouts/Layout.astro";
 import "../styles/global.css";
+import Cards from "../components/react/Cards";
 ---
 
 <Layout>
-  <main class="min-h-screen bg-slate-50 text-slate-900">
+  <main class="min-sh-screen bg-slate-50 text-slate-900">
     <section class="relative overflow-hidden">
-      <div class="absolute inset-0 bg-[radial-gradient(circle_at_top_left,rgba(59,130,246,0.08),transparent_30%),radial-gradient(circle_at_bottom_right,rgba(168,85,247,0.06),transparent_28%)]"></div>
+      <div
+        class="absolute inset-0 bg-[radial-gradient(circle_at_top_left,rgba(59,130,246,0.08),transparent_30%),radial-gradient(circle_at_bottom_right,rgba(168,85,247,0.06),transparent_28%)]"
+      >
+      </div>
 
       <div class="relative mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
         <div class="mb-8 flex items-center justify-between gap-4">
@@ -18,27 +22,40 @@ import "../styles/global.css";
             Volver
           </a>
 
-          <div class="rounded-full border border-slate-200 bg-white px-4 py-2 text-sm font-medium text-slate-600 shadow-sm">
+          <div
+            class="rounded-full border border-slate-200 bg-white px-4 py-2 text-sm font-medium text-slate-600 shadow-sm"
+          >
             Disponibilidad de compañeros
           </div>
         </div>
 
         <div class="mb-8">
-          <h1 class="text-3xl font-semibold tracking-tight text-slate-900 sm:text-4xl lg:text-5xl">
+          <h1
+            class="text-3xl font-semibold tracking-tight text-slate-900 sm:text-4xl lg:text-5xl"
+          >
             Disponibilidad del equipo
           </h1>
 
-          <p class="mt-4 max-w-3xl text-sm leading-7 text-slate-600 sm:text-base">
-            Consulta rápidamente quién está disponible para trabajar hoy, en qué oficina se
-            encuentra, si está en teletrabajo o si no trabaja por baja, vacaciones u otro
-            motivo.
+          <p
+            class="mt-4 max-w-3xl text-sm leading-7 text-slate-600 sm:text-base"
+          >
+            Consulta rápidamente quién está disponible para trabajar hoy, en qué
+            oficina se encuentra, si está en teletrabajo o si no trabaja por
+            baja, vacaciones u otro motivo.
           </p>
         </div>
 
-        <section class="rounded-3xl border border-slate-200 bg-white p-5 shadow-xl shadow-slate-200/70 sm:p-6">
-          <div class="grid gap-4 xl:grid-cols-[minmax(0,1fr)_220px_220px_220px]">
+        <section
+          class="rounded-3xl border border-slate-200 bg-white p-5 shadow-xl shadow-slate-200/70 sm:p-6"
+        >
+          <div
+            class="grid gap-4 xl:grid-cols-[minmax(0,1fr)_220px_220px_220px]"
+          >
             <div>
-              <label for="search" class="mb-2 block text-sm font-medium text-slate-700">
+              <label
+                for="search"
+                class="mb-2 block text-sm font-medium text-slate-700"
+              >
                 Buscar
               </label>
               <input
@@ -50,7 +67,10 @@ import "../styles/global.css";
             </div>
 
             <div>
-              <label for="status-filter" class="mb-2 block text-sm font-medium text-slate-700">
+              <label
+                for="status-filter"
+                class="mb-2 block text-sm font-medium text-slate-700"
+              >
                 Filtrar por estado
               </label>
               <select
@@ -65,11 +85,15 @@ import "../styles/global.css";
                 <option value="Baja">Baja</option>
                 <option value="Asuntos propios">Asuntos propios</option>
                 <option value="Permiso">Permiso</option>
+                <option value="Pendiente">Pendiente</option>
               </select>
             </div>
 
             <div>
-              <label for="office-filter" class="mb-2 block text-sm font-medium text-slate-700">
+              <label
+                for="office-filter"
+                class="mb-2 block text-sm font-medium text-slate-700"
+              >
                 Filtrar por oficina
               </label>
               <select
@@ -87,7 +111,10 @@ import "../styles/global.css";
             </div>
 
             <div>
-              <label for="sort-by" class="mb-2 block text-sm font-medium text-slate-700">
+              <label
+                for="sort-by"
+                class="mb-2 block text-sm font-medium text-slate-700"
+              >
                 Ordenar por
               </label>
               <select
@@ -103,8 +130,13 @@ import "../styles/global.css";
           </div>
 
           <div class="mt-5 flex flex-wrap items-center gap-3">
-            <div class="rounded-full border border-slate-200 bg-slate-50 px-4 py-2 text-sm text-slate-600">
-              Total visibles: <span id="results-count" class="font-semibold text-slate-900">0</span>
+            <div
+              class="rounded-full border border-slate-200 bg-slate-50 px-4 py-2 text-sm text-slate-600"
+            >
+              Total visibles:
+              <span id="results-count" class="font-semibold text-slate-900"
+                >0</span
+              >
             </div>
 
             <button
@@ -117,7 +149,9 @@ import "../styles/global.css";
           </div>
         </section>
 
-        <section class="mt-6 rounded-3xl border border-slate-200 bg-white p-5 shadow-xl shadow-slate-200/70 sm:p-6">
+        <section
+          class="mt-6 rounded-3xl border border-slate-200 bg-white p-5 shadow-xl shadow-slate-200/70 sm:p-6"
+        >
           <div class="mb-5 flex items-center justify-between gap-4">
             <div>
               <h2 class="text-lg font-semibold text-slate-900">Compañeros</h2>
@@ -127,350 +161,9 @@ import "../styles/global.css";
             </div>
           </div>
 
-          <div id="empty-state" class="hidden rounded-[28px] border border-dashed border-slate-300 bg-slate-50 p-8 text-center">
-            <div class="mx-auto max-w-md">
-              <div class="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-2xl bg-white text-2xl shadow-sm">
-                👥
-              </div>
-              <h3 class="text-lg font-semibold text-slate-900">No hay resultados</h3>
-              <p class="mt-2 text-sm leading-6 text-slate-500">
-                No se han encontrado compañeros que coincidan con los filtros actuales.
-              </p>
-            </div>
-          </div>
-
-          <div id="team-list" class="grid gap-4 md:grid-cols-2 xl:grid-cols-3"></div>
+          <Cards client:load />
         </section>
       </div>
     </section>
   </main>
-
-  <script>
-    const teammates = [
-      {
-        id: 1,
-        name: "María López",
-        avatar: "https://ui-avatars.com/api/?name=Maria+Lopez&background=e2e8f0&color=0f172a",
-        email: "m.lopez@empresa.com",
-        phone: "600 111 222",
-        status: "Trabaja en oficina",
-        office: "Toledo",
-        room: "Sala Principal",
-        detail: "Mesa T3",
-      },
-      {
-        id: 2,
-        name: "Carlos Martín",
-        avatar: "https://ui-avatars.com/api/?name=Carlos+Martin&background=dbeafe&color=1d4ed8",
-        email: "c.martin@empresa.com",
-        phone: "600 222 333",
-        status: "Teletrabajo",
-        office: "Teletrabajo",
-        room: "",
-        detail: "Disponible online",
-      },
-      {
-        id: 3,
-        name: "Lucía Sánchez",
-        avatar: "https://ui-avatars.com/api/?name=Lucia+Sanchez&background=fce7f3&color=9d174d",
-        email: "l.sanchez@empresa.com",
-        phone: "",
-        status: "Vacaciones",
-        office: "",
-        room: "",
-        detail: "No disponible hoy",
-      },
-      {
-        id: 4,
-        name: "David Romero",
-        avatar: "https://ui-avatars.com/api/?name=David+Romero&background=dcfce7&color=166534",
-        email: "",
-        phone: "600 444 555",
-        status: "Trabaja en oficina",
-        office: "Madrid",
-        room: "Sala Dirección",
-        detail: "Mesa M2",
-      },
-      {
-        id: 5,
-        name: "Ana Gómez",
-        avatar: "https://ui-avatars.com/api/?name=Ana+Gomez&background=ede9fe&color=6d28d9",
-        email: "a.gomez@empresa.com",
-        phone: "600 555 666",
-        status: "Baja",
-        office: "",
-        room: "",
-        detail: "No disponible hoy",
-      },
-      {
-        id: 6,
-        name: "Javier Ruiz",
-        avatar: "https://ui-avatars.com/api/?name=Javier+Ruiz&background=fef3c7&color=92400e",
-        email: "j.ruiz@empresa.com",
-        phone: "600 666 777",
-        status: "Evento",
-        office: "Evento",
-        room: "",
-        detail: "Fuera de oficina",
-      },
-      {
-        id: 7,
-        name: "Marta Pérez",
-        avatar: "https://ui-avatars.com/api/?name=Marta+Perez&background=e0f2fe&color=0c4a6e",
-        email: "m.perez@empresa.com",
-        phone: "",
-        status: "Trabaja en oficina",
-        office: "Alcobendas",
-        room: "Sala Atlas",
-        detail: "Mesa A5",
-      },
-      {
-        id: 8,
-        name: "Raúl Torres",
-        avatar: "https://ui-avatars.com/api/?name=Raul+Torres&background=fee2e2&color=991b1b",
-        email: "r.torres@empresa.com",
-        phone: "600 888 999",
-        status: "Asuntos propios",
-        office: "",
-        room: "",
-        detail: "No disponible hoy",
-      },
-      {
-        id: 9,
-        name: "Elena Díaz",
-        avatar: "https://ui-avatars.com/api/?name=Elena+Diaz&background=f1f5f9&color=334155",
-        email: "e.diaz@empresa.com",
-        phone: "600 123 456",
-        status: "Trabaja en oficina",
-        office: "Consuegra",
-        room: "Sala Central",
-        detail: "Mesa C4",
-      },
-      {
-        id: 10,
-        name: "Pablo Fernández",
-        avatar: "https://ui-avatars.com/api/?name=Pablo+Fernandez&background=d1fae5&color=065f46",
-        email: "",
-        phone: "600 321 654",
-        status: "Permiso",
-        office: "",
-        room: "",
-        detail: "Ausencia autorizada",
-      },
-    ];
-
-    const searchInput = document.getElementById("search");
-    const statusFilter = document.getElementById("status-filter");
-    const officeFilter = document.getElementById("office-filter");
-    const sortBy = document.getElementById("sort-by");
-    const resetFiltersBtn = document.getElementById("reset-filters-btn");
-    const resultsCount = document.getElementById("results-count");
-    const teamList = document.getElementById("team-list");
-    const emptyState = document.getElementById("empty-state");
-
-    function getStatusStyles(status) {
-      switch (status) {
-        case "Trabaja en oficina":
-          return {
-            badge: "border-emerald-200 bg-emerald-50 text-emerald-700",
-            dot: "bg-emerald-400",
-            label: "Disponible",
-          };
-        case "Teletrabajo":
-          return {
-            badge: "border-blue-200 bg-blue-50 text-blue-700",
-            dot: "bg-blue-400",
-            label: "Teletrabajo",
-          };
-        case "Evento":
-          return {
-            badge: "border-violet-200 bg-violet-50 text-violet-700",
-            dot: "bg-violet-400",
-            label: "Evento",
-          };
-        case "Vacaciones":
-          return {
-            badge: "border-amber-200 bg-amber-50 text-amber-700",
-            dot: "bg-amber-400",
-            label: "Vacaciones",
-          };
-        case "Baja":
-          return {
-            badge: "border-rose-200 bg-rose-50 text-rose-700",
-            dot: "bg-rose-400",
-            label: "Baja",
-          };
-        case "Asuntos propios":
-          return {
-            badge: "border-orange-200 bg-orange-50 text-orange-700",
-            dot: "bg-orange-400",
-            label: "Asuntos propios",
-          };
-        case "Permiso":
-          return {
-            badge: "border-slate-200 bg-slate-100 text-slate-700",
-            dot: "bg-slate-400",
-            label: "Permiso",
-          };
-        default:
-          return {
-            badge: "border-slate-200 bg-slate-50 text-slate-700",
-            dot: "bg-slate-400",
-            label: status,
-          };
-      }
-    }
-
-    function getContactText(person) {
-      if (person.email && person.phone) {
-        return `${person.email} · ${person.phone}`;
-      }
-      return person.email || person.phone || "Sin datos de contacto";
-    }
-
-    function getLocationText(person) {
-      if (person.status === "Trabaja en oficina") {
-        return `${person.office} · ${person.room || "Sin sala"} · ${person.detail || ""}`.replace(/ · $/, "");
-      }
-
-      if (person.status === "Teletrabajo") {
-        return "Teletrabajando";
-      }
-
-      if (person.status === "Evento") {
-        return "Asistiendo a evento";
-      }
-
-      return person.detail || "No disponible";
-    }
-
-    function renderTeam(list) {
-      teamList.innerHTML = "";
-      resultsCount.textContent = list.length;
-
-      if (!list.length) {
-        emptyState.classList.remove("hidden");
-        return;
-      }
-
-      emptyState.classList.add("hidden");
-
-      list.forEach((person) => {
-        const statusStyles = getStatusStyles(person.status);
-
-        const card = document.createElement("article");
-        card.className =
-          "rounded-3xl border border-slate-200 bg-white p-5 shadow-sm transition hover:border-slate-300 hover:shadow-md";
-
-        card.innerHTML = `
-          <div class="flex items-start gap-4">
-            <img
-              src="${person.avatar}"
-              alt="${person.name}"
-              class="h-16 w-16 rounded-2xl border border-slate-200 object-cover bg-slate-100"
-            />
-
-            <div class="min-w-0 flex-1">
-              <div class="flex flex-wrap items-start justify-between gap-3">
-                <div class="min-w-0">
-                  <h3 class="truncate text-lg font-semibold text-slate-900">${person.name}</h3>
-                  <p class="mt-1 text-sm text-slate-500">${getContactText(person)}</p>
-                </div>
-
-                <div class="inline-flex items-center gap-2 rounded-full border px-3 py-1 text-xs font-semibold ${statusStyles.badge}">
-                  <span class="h-2.5 w-2.5 rounded-full ${statusStyles.dot}"></span>
-                  ${statusStyles.label}
-                </div>
-              </div>
-
-              <div class="mt-4 grid gap-3">
-                <div class="rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3">
-                  <p class="text-xs font-medium uppercase tracking-wide text-slate-500">
-                    Estado de hoy
-                  </p>
-                  <p class="mt-1 text-sm font-medium text-slate-900">${person.status}</p>
-                </div>
-
-                <div class="rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3">
-                  <p class="text-xs font-medium uppercase tracking-wide text-slate-500">
-                    Ubicación / detalle
-                  </p>
-                  <p class="mt-1 text-sm font-medium text-slate-900">${getLocationText(person)}</p>
-                </div>
-              </div>
-            </div>
-          </div>
-        `;
-
-        teamList.appendChild(card);
-      });
-    }
-
-    function getFilteredAndSortedData() {
-      const searchValue = searchInput.value.trim().toLowerCase();
-      const selectedStatus = statusFilter.value;
-      const selectedOffice = officeFilter.value;
-      const selectedSort = sortBy.value;
-
-      let filtered = teammates.filter((person) => {
-        const searchTarget = [
-          person.name,
-          person.email,
-          person.phone,
-          person.status,
-          person.office,
-          person.room,
-          person.detail,
-        ]
-          .filter(Boolean)
-          .join(" ")
-          .toLowerCase();
-
-        const matchesSearch = !searchValue || searchTarget.includes(searchValue);
-        const matchesStatus =
-          selectedStatus === "all" || person.status === selectedStatus;
-        const matchesOffice =
-          selectedOffice === "all" || person.office === selectedOffice;
-
-        return matchesSearch && matchesStatus && matchesOffice;
-      });
-
-      filtered.sort((a, b) => {
-        switch (selectedSort) {
-          case "name-desc":
-            return b.name.localeCompare(a.name, "es");
-          case "status-asc":
-            return a.status.localeCompare(b.status, "es");
-          case "office-asc":
-            return (a.office || "").localeCompare(b.office || "", "es");
-          case "name-asc":
-          default:
-            return a.name.localeCompare(b.name, "es");
-        }
-      });
-
-      return filtered;
-    }
-
-    function updateList() {
-      const data = getFilteredAndSortedData();
-      renderTeam(data);
-    }
-
-    function resetFilters() {
-      searchInput.value = "";
-      statusFilter.value = "all";
-      officeFilter.value = "all";
-      sortBy.value = "name-asc";
-      updateList();
-    }
-
-    searchInput.addEventListener("input", updateList);
-    statusFilter.addEventListener("change", updateList);
-    officeFilter.addEventListener("change", updateList);
-    sortBy.addEventListener("change", updateList);
-    resetFiltersBtn.addEventListener("click", resetFilters);
-
-    updateList();
-  </script>
 </Layout>

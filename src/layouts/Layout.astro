@@ -3,18 +3,17 @@ import "../styles/global.css";
 ---
 
 <!doctype html>
-<html lang="es">
-  <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width" />
-    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
-    <link rel="icon" href="/favicon.ico" />
-    <meta name="generator" content={Astro.generator} />
-    <meta name="robots" content="noindex, nofollow, noarchive, nosnippet" />
-    <title>Reserva de puestos</title>
-  </head>
-
-  <body class="min-h-screen bg-slate-50 text-slate-900">
-    <slot />
-  </body>
+<html lang="en">
+	<head>
+		<script src="//api.bitrix24.com/api/v1/" is:inline></script>
+		<script src="../scripts/scriptBX24.js"></script>
+		<meta charset="UTF-8" />
+		<meta name="viewport" content="width=device-width" />
+		<link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+		<link rel="icon" href="/favicon.ico" />
+		<title>Astro Basics</title>
+	</head>
+	<body>
+		<slot />
+	</body>
 </html>
