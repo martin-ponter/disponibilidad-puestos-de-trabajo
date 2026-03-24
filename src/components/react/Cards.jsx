@@ -8,7 +8,7 @@ function UserCard({ user }) {
 	const position = user.WORK_POSITION || "Sin puesto";
 	const avatar = user.PERSONAL_PHOTO || user.PERSONAL_PHOTO_PATH || "";
 	const office = user.UF_DEPARTMENT?.join(", ") || "Sin oficina";
-	const status = "Pendiente";
+	const status = user.ACTIVE ? "Activo" : "Inactivo";
 
 	return (
 		<article className="rounded-3xl border border-slate-200 bg-white p-5 shadow-sm">
@@ -66,43 +66,46 @@ export default function Cards() {
 
 		let cancelled = false;
 		let allUsers = [];
-		let expectedTotal = null;
 
 		window.BX24.init(() => {
-			window.BX24.callMethod("user.get", {}, function handleResult(result) {
-				if (cancelled) return;
+			window.BX24.callMethod(
+				"user.get",
+				{
+					FILTER: {
+						ACTIVE: false,
+					},
+				},
+				function handleResult(result) {
+					if (cancelled) return;
 
-				if (result.error()) {
-					console.error(result.error());
-					setError(
-						result.error().ex ||
-							result.error().description ||
-							"Error al obtener usuarios de Bitrix."
-					);
+					if (result.error()) {
+						console.error(result.error());
+						setError(
+							result.error().ex ||
+								result.error().description ||
+								"Error al obtener usuarios de Bitrix."
+						);
+						setLoading(false);
+						return;
+					}
+
+					const pageData = result.data() || [];
+					allUsers = allUsers.concat(pageData);
+
+					console.log("Página:", pageData.length);
+					console.log("Acumulados:", allUsers.length);
+					console.log("Total esperado:", result.total?.());
+					console.log("Hay más:", result.more());
+
+					if (result.more()) {
+						result.next();
+						return;
+					}
+
+					setUsers(allUsers);
 					setLoading(false);
-					return;
 				}
-
-				const pageData = result.data() || [];
-				allUsers = allUsers.concat(pageData);
-
-				if (typeof result.total === "function") {
-					expectedTotal = result.total();
-				}
-
-				console.log("Página:", pageData.length);
-				console.log("Acumulados:", allUsers.length);
-				console.log("Total esperado:", expectedTotal);
-				console.log("Hay más:", result.more());
-
-				if (result.more()) {
-					result.next();
-					return;
-				}
-
-				setUsers(allUsers);
-				setLoading(false);
-			});
+			);
 		});
 
 		return () => {
@@ -111,55 +114,11 @@ export default function Cards() {
 	}, []);
 
 	if (loading) {
-		return (
-			<div className="rounded-[28px] border border-slate-200 bg-slate-50 p-8 text-center">
-				<div className="mx-auto max-w-md">
-					<div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-2xl bg-white text-2xl shadow-sm">
-						⏳
-					</div>
-					<h3 className="text-lg font-semibold text-slate-900">
-						Cargando compañeros
-					</h3>
-					<p className="mt-2 text-sm leading-6 text-slate-500">
-						Estamos obteniendo los usuarios reales desde Bitrix.
-					</p>
-				</div>
-			</div>
-		);
+		return <div>Cargando compañeros...</div>;
 	}
 
 	if (error) {
-		return (
-			<div className="rounded-[28px] border border-rose-200 bg-rose-50 p-8 text-center">
-				<div className="mx-auto max-w-md">
-					<div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-2xl bg-white text-2xl shadow-sm">
-						❌
-					</div>
-					<h3 className="text-lg font-semibold text-slate-900">
-						No se pudieron cargar los usuarios
-					</h3>
-					<p className="mt-2 text-sm leading-6 text-slate-600">{error}</p>
-				</div>
-			</div>
-		);
-	}
-
-	if (!users.length) {
-		return (
-			<div className="rounded-[28px] border border-dashed border-slate-300 bg-slate-50 p-8 text-center">
-				<div className="mx-auto max-w-md">
-					<div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-2xl bg-white text-2xl shadow-sm">
-						👥
-					</div>
-					<h3 className="text-lg font-semibold text-slate-900">
-						No hay resultados
-					</h3>
-					<p className="mt-2 text-sm leading-6 text-slate-500">
-						No se han encontrado usuarios.
-					</p>
-				</div>
-			</div>
-		);
+		return <div>{error}</div>;
 	}
 
 	return (
