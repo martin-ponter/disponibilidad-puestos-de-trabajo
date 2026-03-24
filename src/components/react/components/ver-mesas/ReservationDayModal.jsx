@@ -1,13 +1,18 @@
 import React, { useEffect, useMemo, useState } from "react";
 import { officeMaps } from "../../../../data/maps/office-maps.js";
-import OfficeMapReact from "./OfficeMapReact.jsx";
+import OfficeMapReact from "../../OfficeMapReact.jsx";
 
-const TOLEDO_ROOMS = Object.values(officeMaps)
-	.filter((map) => map.office === "Toledo")
-	.map((map) => map.room);
+const CUSTOM_OFFICE_ROOMS = Object.values(officeMaps).reduce((acc, map) => {
+	if (!acc[map.office]) {
+		acc[map.office] = [];
+	}
+
+	acc[map.office].push(map.room);
+	return acc;
+}, {});
 
 const OFFICE_ROOMS = {
-	Toledo: TOLEDO_ROOMS,
+	...CUSTOM_OFFICE_ROOMS,
 	Madrid: ["Sala A", "Sala B", "Sala Dirección", "Sala Colaborativa"],
 	Alcobendas: ["Sala Atlas", "Sala Nexo", "Sala Focus"],
 	Consuegra: ["Sala Central", "Sala Archivo", "Sala Clientes"],
@@ -455,52 +460,20 @@ export default function ReservationDayModal({
 									<div className="overflow-hidden rounded-[28px] border border-slate-200 bg-slate-50 p-4 sm:p-6">
 										<div className="mb-4 flex flex-wrap items-center justify-between gap-3">
 											<div className="rounded-2xl bg-white px-4 py-2 text-sm text-slate-600 shadow-sm">
-												Plano provisional
+												Plano de ocupaciÃ³n
 											</div>
 											<div className="rounded-2xl border border-slate-200 bg-white px-4 py-2 text-sm text-slate-600">
 												Haz clic en una mesa disponible
 											</div>
 										</div>
 
-										<div className="relative min-h-[420px] rounded-[24px] border border-slate-200 bg-gradient-to-br from-slate-100 to-white p-4 sm:min-h-[520px] sm:p-6">
-											<div className="absolute left-4 top-4 rounded-xl border border-slate-200 bg-white px-3 py-2 text-xs text-slate-600 sm:left-6 sm:top-6">
-												Entrada
-											</div>
-
-											<div className="absolute right-4 top-4 rounded-xl border border-slate-200 bg-white px-3 py-2 text-xs text-slate-600 sm:right-6 sm:top-6">
-												Ventanas
-											</div>
-
-											<div className="absolute left-1/2 top-6 h-14 w-32 -translate-x-1/2 rounded-2xl border border-slate-200 bg-slate-200/70"></div>
-											<div className="absolute bottom-6 left-6 right-6 h-3 rounded-full bg-slate-200"></div>
-
-											<div className="grid min-h-[360px] grid-cols-2 gap-4 pt-20 sm:grid-cols-3 lg:grid-cols-4">
-												{deskOptions.map((desk) => (
-													<button
-														key={desk.id}
-														type="button"
-														disabled={!desk.available}
-														onClick={() => {
-															if (!desk.available) return;
-															setSelectedDesk(desk.id);
-														}}
-														className={getDeskCardClasses(desk.available, selectedDesk === desk.id)}
-													>
-														<div className="flex flex-col items-center justify-center gap-2">
-															<span className="text-base">{desk.id}</span>
-															<span
-																className={`rounded-full px-2 py-1 text-[11px] font-medium ${desk.available
-																	? "bg-emerald-100 text-emerald-700"
-																	: "bg-rose-100 text-rose-700"
-																	}`}
-															>
-																{desk.available ? "Disponible" : "Ocupada"}
-															</span>
-														</div>
-													</button>
-												))}
-											</div>
-										</div>
+										<OfficeMapReact
+											office={office}
+											room={room}
+											genericDeskData={deskOptions}
+											selectedDesk={selectedDesk}
+											onSelectDesk={setSelectedDesk}
+										/>
 									</div>
 								)}
 

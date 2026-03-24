@@ -1,5 +1,5 @@
 import React from "react";
-import { officeMaps } from "../../../../data/office-maps";
+import { officeMaps } from "../../data/maps/office-maps.js";
 
 const CUSTOM_DESK_STATES = {
 	"Toledo::Sala Laboral-Fiscal": {
