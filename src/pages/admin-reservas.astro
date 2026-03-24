@@ -1,39 +1,9 @@
 ---
 import Layout from "../layouts/Layout.astro";
 import "../styles/global.css";
-
-import AdminHeader from "../components/astro/admin-reservas/AdminHeader.astro";
-import AdminFilters from "../components/astro/admin-reservas/AdminFilters.astro";
-import AdminMapView from "../components/astro/admin-reservas/AdminMapView.astro";
-import AdminListView from "../components/astro/admin-reservas/AdminListView.astro";
-import AdminDrawer from "../components/astro/admin-reservas/AdminDrawer.astro";
-import AdminConfirmationModal from "../components/astro/admin-reservas/AdminConfirmationModal.astro";
+import AdminReservasPage from "../components/react/pages/AdminReservasPage";
 ---
 
 <Layout>
-  <main class="min-h-screen bg-slate-50 text-slate-900">
-    <section class="relative overflow-hidden">
-      <div class="absolute inset-0 bg-[radial-gradient(circle_at_top_left,rgba(59,130,246,0.08),transparent_30%),radial-gradient(circle_at_bottom_right,rgba(168,85,247,0.06),transparent_28%)]"></div>
-
-      <div class="relative mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
-        <AdminHeader />
-        <AdminFilters />
-
-        <section class="mt-6 grid gap-6 xl:grid-cols-[minmax(0,1fr)_360px]">
-          <div class="space-y-6">
-            <AdminMapView />
-            <AdminListView />
-          </div>
-
-          <AdminDrawer />
-        </section>
-      </div>
-    </section>
-
-    <AdminConfirmationModal />
-  </main>
-
-  <script>
-    import "../scripts/admin-reservas.ts";
-  </script>
+  <AdminReservasPage client:load />
 </Layout>
