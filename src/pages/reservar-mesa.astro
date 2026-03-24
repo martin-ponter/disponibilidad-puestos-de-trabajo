@@ -1,0 +1,46 @@
+---
+import Layout from "../layouts/Layout.astro";
+import "../styles/global.css";
+import ReservationHeader from "../components/astro/reserva/ReservationHeader.astro";
+import CalendarLegend from "../components/astro/reserva/CalendarLegend.astro";
+import ReservationCalendarApp from "../components/react/components/ver-mesas/ReservationCalendarApp.jsx";
+---
+
+<Layout>
+  <main class="min-h-screen bg-slate-50 text-slate-900">
+    <section class="relative overflow-hidden">
+      <div
+        class="absolute inset-0 bg-[radial-gradient(circle_at_top_left,rgba(59,130,246,0.08),transparent_30%),radial-gradient(circle_at_bottom_right,rgba(168,85,247,0.06),transparent_28%)]"
+      >
+      </div>
+
+      <div class="relative mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
+        <ReservationHeader />
+
+        <section
+          class="rounded-3xl border border-slate-200 bg-white p-5 shadow-xl shadow-slate-200/70 sm:p-6"
+        >
+          <div
+            class="mb-6 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between"
+          >
+            <div>
+              <h2 class="text-xl font-semibold text-slate-900">Calendario</h2>
+              <p class="mt-1 text-sm text-slate-500">
+                Pulsa en un día para crear o editar tu jornada.
+              </p>
+            </div>
+
+            <div
+              class="rounded-full border border-slate-200 bg-white px-4 py-2 text-sm font-medium text-slate-600 shadow-sm"
+            >
+              Reserva de puestos
+            </div>
+          </div>
+
+          <CalendarLegend />
+          <ReservationCalendarApp client:load />
+        </section>
+      </div>
+    </section>
+  </main>
+</Layout>
