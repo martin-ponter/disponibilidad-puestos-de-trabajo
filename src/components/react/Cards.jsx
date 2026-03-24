@@ -5,7 +5,6 @@ function UserCard({ user }) {
 		[user.NAME, user.LAST_NAME].filter(Boolean).join(" ") || "Sin nombre";
 
 	const email = user.EMAIL || "Sin email";
-	const phone = user.PERSONAL_MOBILE || user.WORK_PHONE || "Sin teléfono";
 	const position = user.WORK_POSITION || "Sin puesto";
 	const avatar = user.PERSONAL_PHOTO || user.PERSONAL_PHOTO_PATH || "";
 	const office = user.UF_DEPARTMENT?.join(", ") || "Sin oficina";
@@ -57,55 +56,49 @@ export default function Cards() {
 	const [error, setError] = useState("");
 
 	useEffect(() => {
-		function bx24Call(method, params = {}) {
-			return new Promise((resolve, reject) => {
-				window.BX24.callMethod(method, params, (result) => {
+		if (typeof window === "undefined") return;
+
+		if (!window.BX24) {
+			setError("BX24 no está disponible en la ventana.");
+			setLoading(false);
+			return;
+		}
+
+		window.BX24.init(() => {
+			const allUsers = [];
+
+			function loadPage(start = 0) {
+				console.log("Cargando página con start =", start);
+
+				window.BX24.callMethod("user.get", { start }, (result) => {
 					if (result.error()) {
-						reject(result.error());
+						console.error("Error Bitrix:", result.error());
+						setError(
+							result.error().ex ||
+								result.error().description ||
+								"Error al obtener usuarios de Bitrix."
+						);
+						setLoading(false);
 						return;
 					}
 
-					resolve(result.data() || []);
-				});
-			});
-		}
+					const pageData = result.data() || [];
+					console.log("Usuarios recibidos:", pageData.length);
 
-		async function loadAllUsers() {
-			try {
-				setLoading(true);
-				setError("");
+					allUsers.push(...pageData);
 
-				await new Promise((resolve) => {
-					window.BX24.init(resolve);
-				});
-
-				let start = 0;
-				let allUsers = [];
-				let keepLoading = true;
-
-				while (keepLoading) {
-					const page = await bx24Call("user.get", {
-						start,
-					});
-
-					allUsers = allUsers.concat(page);
-
-					if (page.length < 50) {
-						keepLoading = false;
-					} else {
-						start += 50;
+					if (pageData.length < 50) {
+						setUsers(allUsers);
+						setLoading(false);
+						return;
 					}
-				}
 
-				setUsers(allUsers);
-			} catch (err) {
-				setError(err?.ex || err?.description || "Error al obtener usuarios de Bitrix.");
-			} finally {
-				setLoading(false);
+					loadPage(start + 50);
+				});
 			}
-		}
 
-		loadAllUsers();
+			loadPage(0);
+		});
 	}, []);
 
 	if (loading) {
