@@ -2,10 +2,12 @@ import React, { useEffect, useMemo, useState } from "react";
 import { officeMaps } from "../../../../data/office-maps";
 import OfficeMapReact from "./OfficeMapReact.jsx";
 
+const TOLEDO_ROOMS = Object.values(officeMaps)
+	.filter((map) => map.office === "Toledo")
+	.map((map) => map.room);
+
 const OFFICE_ROOMS = {
-	Toledo: Object.values(officeMaps)
-		.filter((map) => map.office === "Toledo")
-		.map((map) => map.room),
+	Toledo: TOLEDO_ROOMS,
 	Madrid: ["Sala A", "Sala B", "Sala Dirección", "Sala Colaborativa"],
 	Alcobendas: ["Sala Atlas", "Sala Nexo", "Sala Focus"],
 	"Mancha Centro": ["Sala Central", "Sala Archivo", "Sala Clientes"],
