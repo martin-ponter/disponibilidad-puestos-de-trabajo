@@ -37,12 +37,25 @@ import Layout from "../layouts/Layout.astro";
 
             <a
               href="/admin-reservas"
-              class="inline-flex shrink-0 items-center gap-2 rounded-2xl border border-indigo-200 bg-indigo-50 px-4 py-3 text-sm font-semibold text-indigo-700 shadow-sm transition hover:-translate-y-0.5 hover:border-indigo-300 hover:bg-indigo-100 hover:shadow-md"
+              class="group inline-flex shrink-0 items-center gap-3 self-start rounded-2xl border border-indigo-200 bg-white px-5 py-3 text-sm font-semibold text-slate-900 shadow-lg shadow-indigo-100/60 transition hover:-translate-y-0.5 hover:border-indigo-300 hover:bg-indigo-50 hover:shadow-xl md:self-auto"
             >
-              <span class="text-base">🛠️</span>
-              Panel admin
+              <span class="flex h-10 w-10 items-center justify-center rounded-2xl bg-indigo-50 text-lg text-indigo-700 transition group-hover:bg-indigo-100">
+                ⚙️
+              </span>
+
+              <span class="flex flex-col items-start leading-tight">
+                <span class="text-[11px] font-medium uppercase tracking-wide text-indigo-600">
+                  Administración
+                </span>
+                <span>Panel admin</span>
+              </span>
             </a>
           </div>
+
+          <p class="mt-4 max-w-3xl text-sm leading-7 text-slate-600 sm:text-base">
+            Desde aquí puedes gestionar la reserva de mesas, consultar el estado de los
+            puestos y revisar la disponibilidad de tus compañer@s de forma rápida.
+          </p>
         </div>
 
         <div class="grid gap-6 md:grid-cols-2 xl:grid-cols-3">

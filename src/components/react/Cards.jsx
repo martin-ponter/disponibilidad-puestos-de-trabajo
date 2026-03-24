@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useState } from "react";
 
 function UserCard({ user }) {
 	const fullName =
@@ -57,22 +57,55 @@ export default function Cards() {
 	const [error, setError] = useState("");
 
 	useEffect(() => {
-		function loadUsers() {
-			window.BX24.init(() => {
-				window.BX24.callMethod("user.get", {}, (result) => {
+		function bx24Call(method, params = {}) {
+			return new Promise((resolve, reject) => {
+				window.BX24.callMethod(method, params, (result) => {
 					if (result.error()) {
-						setError(result.error().ex || "Error al obtener usuarios de Bitrix.");
-						setLoading(false);
+						reject(result.error());
 						return;
 					}
 
-					setUsers(result.data() || []);
-					setLoading(false);
+					resolve(result.data() || []);
 				});
 			});
 		}
 
-		loadUsers();
+		async function loadAllUsers() {
+			try {
+				setLoading(true);
+				setError("");
+
+				await new Promise((resolve) => {
+					window.BX24.init(resolve);
+				});
+
+				let start = 0;
+				let allUsers = [];
+				let keepLoading = true;
+
+				while (keepLoading) {
+					const page = await bx24Call("user.get", {
+						start,
+					});
+
+					allUsers = allUsers.concat(page);
+
+					if (page.length < 50) {
+						keepLoading = false;
+					} else {
+						start += 50;
+					}
+				}
+
+				setUsers(allUsers);
+			} catch (err) {
+				setError(err?.ex || err?.description || "Error al obtener usuarios de Bitrix.");
+			} finally {
+				setLoading(false);
+			}
+		}
+
+		loadAllUsers();
 	}, []);
 
 	if (loading) {
