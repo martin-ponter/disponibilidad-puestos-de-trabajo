@@ -1,0 +1,78 @@
+---
+import WorkStatusCards from "./WorkStatusCards.astro";
+import WorkFormPanel from "./WorkFormPanel.astro";
+import OfficeMapPanel from "./OfficeMapPanel.astro";
+import AbsencePanel from "./AbsencePanel.astro";
+---
+
+<div
+  id="day-modal"
+  class="pointer-events-none fixed inset-0 z-50 flex items-center justify-center bg-slate-900/30 p-4 opacity-0 backdrop-blur-sm transition"
+>
+  <div class="max-h-[90vh] w-full max-w-6xl overflow-auto rounded-3xl border border-slate-200 bg-white shadow-2xl">
+    <div class="sticky top-0 z-10 border-b border-slate-200 bg-white/95 px-5 py-4 backdrop-blur sm:px-6">
+      <div class="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+        <div>
+          <div class="flex flex-wrap items-center gap-3">
+            <h3 id="modal-main-title" class="text-xl font-semibold text-slate-900">
+              Gestionar jornada
+            </h3>
+            <span
+              id="modal-mode-badge"
+              class="hidden rounded-full border border-blue-200 bg-blue-50 px-3 py-1 text-xs font-semibold text-blue-700"
+            >
+              Editando registro
+            </span>
+          </div>
+
+          <p id="modal-selected-date" class="mt-1 text-sm text-slate-500">
+            Fecha seleccionada: -
+          </p>
+
+          <p
+            id="modal-existing-summary"
+            class="mt-2 hidden rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-600"
+          ></p>
+        </div>
+
+        <div class="flex flex-wrap items-center gap-3">
+          <button
+            id="delete-entry-btn"
+            type="button"
+            class="hidden inline-flex items-center justify-center rounded-2xl border border-rose-200 bg-rose-50 px-4 py-2 text-sm font-medium text-rose-700 transition hover:bg-rose-100"
+          >
+            Eliminar registro
+          </button>
+
+          <button
+            id="close-day-modal-btn"
+            type="button"
+            class="inline-flex items-center justify-center rounded-2xl border border-slate-200 bg-white px-4 py-2 text-sm font-medium text-slate-700 transition hover:bg-slate-100"
+          >
+            Cerrar
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <div class="p-5 sm:p-6">
+      <div class="mb-6">
+        <h4 class="text-base font-semibold text-slate-900">¿Trabajas este día?</h4>
+        <p class="mt-1 text-sm text-slate-500">
+          Indica si trabajas o si ese día no estarás disponible.
+        </p>
+      </div>
+
+      <WorkStatusCards />
+
+      <div id="works-section" class="mt-8 hidden">
+        <div class="grid gap-6 xl:grid-cols-[380px_minmax(0,1fr)]">
+          <WorkFormPanel />
+          <OfficeMapPanel />
+        </div>
+      </div>
+
+      <AbsencePanel />
+    </div>
+  </div>
+</div>
