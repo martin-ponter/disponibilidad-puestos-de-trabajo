@@ -1,23 +1,19 @@
 import React, { useEffect, useMemo, useState } from "react";
+import { officeMaps } from "../../../../data/office-maps";
+import OfficeMapReact from "./OfficeMapReact.jsx";
+
+const TOLEDO_ROOMS = Object.values(officeMaps)
+	.filter((map) => map.office === "Toledo")
+	.map((map) => map.room);
 
 const OFFICE_ROOMS = {
-	Toledo: ["Sala Principal", "Sala Norte", "Sala Reuniones", "Open Space"],
+	Toledo: TOLEDO_ROOMS,
 	Madrid: ["Sala A", "Sala B", "Sala Dirección", "Sala Colaborativa"],
 	Alcobendas: ["Sala Atlas", "Sala Nexo", "Sala Focus"],
-	"Mancha Centro": ["Sala Central", "Sala Archivo", "Sala Clientes"],
+	Consuegra: ["Sala Central", "Sala Archivo", "Sala Clientes"],
 };
 
 const OFFICE_DESK_DATA = {
-	Toledo: [
-		{ id: "T1", available: true },
-		{ id: "T2", available: true },
-		{ id: "T3", available: false },
-		{ id: "T4", available: true },
-		{ id: "T5", available: false },
-		{ id: "T6", available: true },
-		{ id: "T7", available: true },
-		{ id: "T8", available: true },
-	],
 	Madrid: [
 		{ id: "M1", available: true },
 		{ id: "M2", available: false },
@@ -38,7 +34,7 @@ const OFFICE_DESK_DATA = {
 		{ id: "A7", available: true },
 		{ id: "A8", available: true },
 	],
-	"Mancha Centro": [
+	Consuegra: [
 		{ id: "C1", available: false },
 		{ id: "C2", available: true },
 		{ id: "C3", available: true },
@@ -50,7 +46,7 @@ const OFFICE_DESK_DATA = {
 	],
 };
 
-const CENTER_OPTIONS = ["Toledo", "Madrid", "Alcobendas", "Mancha Centro"];
+const CENTER_OPTIONS = ["Toledo", "Madrid", "Alcobendas", "Consuegra"];
 
 function formatHumanDate(dateString) {
 	const [year, month, day] = dateString.split("-");
@@ -101,21 +97,6 @@ function inferMode(entry) {
 	}
 
 	return "office";
-}
-
-function getDeskCardClasses(available, isSelected) {
-	const base =
-		"group relative flex min-h-[92px] cursor-pointer items-center justify-center rounded-3xl border-2 text-sm font-semibold transition duration-200";
-
-	if (!available) {
-		return `${base} cursor-not-allowed border-rose-200 bg-rose-50 text-rose-700`;
-	}
-
-	if (isSelected) {
-		return `${base} border-blue-400 bg-blue-50 text-blue-700 shadow-md shadow-blue-100`;
-	}
-
-	return `${base} border-emerald-200 bg-emerald-50 text-emerald-700 hover:scale-[1.02] hover:border-emerald-300`;
 }
 
 export default function ReservationDayModal({
@@ -263,10 +244,11 @@ export default function ReservationDayModal({
 						<button
 							type="button"
 							onClick={() => setWorkStatus("works")}
-							className={`rounded-3xl border p-5 text-left shadow-sm transition ${workStatus === "works"
-								? "border-blue-400 bg-blue-50 ring-2 ring-blue-200"
-								: "border-slate-200 bg-white hover:border-blue-300 hover:bg-blue-50"
-								}`}
+							className={`rounded-3xl border p-5 text-left shadow-sm transition ${
+								workStatus === "works"
+									? "border-blue-400 bg-blue-50 ring-2 ring-blue-200"
+									: "border-slate-200 bg-white hover:border-blue-300 hover:bg-blue-50"
+							}`}
 						>
 							<div className="mb-4 flex h-12 w-12 items-center justify-center rounded-2xl bg-emerald-50 text-2xl">
 								💼
@@ -280,17 +262,18 @@ export default function ReservationDayModal({
 						<button
 							type="button"
 							onClick={() => setWorkStatus("not-works")}
-							className={`rounded-3xl border p-5 text-left shadow-sm transition ${workStatus === "not-works"
-								? "border-blue-400 bg-blue-50 ring-2 ring-blue-200"
-								: "border-slate-200 bg-white hover:border-blue-300 hover:bg-blue-50"
-								}`}
+							className={`rounded-3xl border p-5 text-left shadow-sm transition ${
+								workStatus === "not-works"
+									? "border-blue-400 bg-blue-50 ring-2 ring-blue-200"
+									: "border-slate-200 bg-white hover:border-blue-300 hover:bg-blue-50"
+							}`}
 						>
 							<div className="mb-4 flex h-12 w-12 items-center justify-center rounded-2xl bg-amber-50 text-2xl">
 								🌴
 							</div>
 							<h5 className="text-lg font-semibold text-slate-900">No trabaja</h5>
 							<p className="mt-2 text-sm leading-6 text-slate-600">
-								Ese día no trabajaré. Podrás indicar el motivo más adelante.
+								Ese día no trabajaré. Se registrará simplemente como no trabaja.
 							</p>
 						</button>
 					</div>
