@@ -1,5 +1,5 @@
 import React, { useEffect, useMemo, useState } from "react";
-import { officeMaps } from "../../../../data/office-maps";
+import { officeMaps } from "../../../../data/maps/office-maps.js";
 import OfficeMapReact from "./OfficeMapReact.jsx";
 
 const TOLEDO_ROOMS = Object.values(officeMaps)
