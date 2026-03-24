@@ -3,9 +3,7 @@ import Layout from "../layouts/Layout.astro";
 import "../styles/global.css";
 import ReservationHeader from "../components/astro/reserva/ReservationHeader.astro";
 import CalendarLegend from "../components/astro/reserva/CalendarLegend.astro";
-import CalendarCard from "../components/astro/reserva/CalendarCard.astro";
-import DayModal from "../components/astro/reserva/DayModal.astro";
-import ConfirmationModal from "../components/astro/reserva/ConfirmationModal.astro";
+import ReservationCalendarApp from "../components/react/components/ver-mesas/ReservationCalendarApp.jsx";
 ---
 
 <Layout>
@@ -33,22 +31,16 @@ import ConfirmationModal from "../components/astro/reserva/ConfirmationModal.ast
             </div>
 
             <div
-              id="selected-date-badge"
-              class="hidden rounded-full border border-blue-200 bg-blue-50 px-4 py-2 text-sm font-medium text-blue-700"
+              class="rounded-full border border-slate-200 bg-white px-4 py-2 text-sm font-medium text-slate-600 shadow-sm"
             >
-              Día seleccionado: <span id="selected-date-text">-</span>
+              Reserva de puestos
             </div>
           </div>
 
           <CalendarLegend />
-          <CalendarCard />
+          <ReservationCalendarApp client:load />
         </section>
       </div>
     </section>
-
-    <DayModal />
-    <ConfirmationModal />
   </main>
-
-  <script src="../scripts/reserva-mesa.ts"></script>
 </Layout>

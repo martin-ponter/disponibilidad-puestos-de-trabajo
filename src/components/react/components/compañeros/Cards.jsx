@@ -82,8 +82,8 @@ export default function Cards() {
 						console.error(result.error());
 						setError(
 							result.error().ex ||
-								result.error().description ||
-								"Error al obtener usuarios de Bitrix."
+							result.error().description ||
+							"Error al obtener usuarios de Bitrix."
 						);
 						setLoading(false);
 						return;
@@ -91,11 +91,6 @@ export default function Cards() {
 
 					const pageData = result.data() || [];
 					allUsers = allUsers.concat(pageData);
-
-					console.log("Página:", pageData.length);
-					console.log("Acumulados:", allUsers.length);
-					console.log("Total esperado:", result.total?.());
-					console.log("Hay más:", result.more());
 
 					if (result.more()) {
 						result.next();
