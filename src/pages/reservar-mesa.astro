@@ -23,21 +23,17 @@ import ReservationCalendarApp from "../components/react/components/calendario/Re
           <div
             class="mb-6 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between"
           >
-            <div>
-              <h2 class="text-xl font-semibold text-slate-900">Calendario</h2>
-              <p class="mt-1 text-sm text-slate-500">
-                Pulsa en un día para crear o editar tu jornada.
-              </p>
-            </div>
-
-            <div
-              class="rounded-full border border-slate-200 bg-white px-4 py-2 text-sm font-medium text-slate-600 shadow-sm"
-            >
-              Reserva de puestos
+            <div class="flex justify-between w-full">
+              <div>
+                <h2 class="text-xl font-semibold text-slate-900">Calendario</h2>
+                <p class="mt-1 text-sm text-slate-500">
+                  Pulsa en un día para crear o editar tu jornada.
+                </p>
+              </div>
+              <CalendarLegend />
             </div>
           </div>
 
-          <CalendarLegend />
           <ReservationCalendarApp client:load />
         </section>
       </div>

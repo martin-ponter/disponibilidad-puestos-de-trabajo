@@ -1,4 +1,37 @@
 import { officeDeskData, officeRooms } from "../../data/adminReservations";
+import { officeMaps } from "../../../../data/maps/office-maps";
+
+function normalizeDeskId(value) {
+  return String(value ?? "").trim().toUpperCase();
+}
+
+function getOfficeRoomsFromMaps(office) {
+  if (!office) return [];
+
+  const rooms = Object.values(officeMaps)
+    .filter((map) => map.office === office)
+    .map((map) => map.room);
+
+  if (rooms.length) return rooms;
+
+  return officeRooms[office] || [];
+}
+
+function getDeskDataForOfficeRoom(office, room) {
+  if (!office || !room) return [];
+
+  const mapKey = `${office}::${room}`;
+  const customMap = officeMaps[mapKey];
+
+  if (customMap?.desks?.length) {
+    return customMap.desks.map((desk) => ({
+      id: desk.id,
+      available: true,
+    }));
+  }
+
+  return officeDeskData[office] || [];
+}
 
 export default function AdminDrawer({
   selectedReservation,
@@ -6,6 +39,7 @@ export default function AdminDrawer({
   onDraftChange,
   onClearDesk,
   onSave,
+  isSaving,
   formatHumanDate,
   getLocationText,
   getStatusMeta,
@@ -40,8 +74,8 @@ export default function AdminDrawer({
 
   const statusMeta = getStatusMeta(selectedReservation.status);
   const officeValue = draft.office || "Toledo";
-  const rooms = officeRooms[officeValue] || [];
-  const desks = officeDeskData[officeValue] || [];
+  const rooms = getOfficeRoomsFromMaps(officeValue);
+  const desks = getDeskDataForOfficeRoom(officeValue, draft.room || rooms[0] || "");
   const showOfficeFields = draft.status !== "not-working";
   const deskDisabled = draft.status !== "office";
 
@@ -131,12 +165,16 @@ export default function AdminDrawer({
 
           <div className="space-y-4">
             <div>
-              <label htmlFor="drawer-status" className="mb-2 block text-sm font-medium text-slate-700">
+              <label
+                htmlFor="drawer-status"
+                className="mb-2 block text-sm font-medium text-slate-700"
+              >
                 Estado
               </label>
               <select
                 id="drawer-status"
                 value={draft.status}
+                disabled={isSaving}
                 onChange={(e) => {
                   const value = e.target.value;
 
@@ -162,7 +200,7 @@ export default function AdminDrawer({
 
                   onDraftChange({ status: value });
                 }}
-                className="w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm text-slate-900 outline-none transition focus:border-blue-400 focus:ring-2 focus:ring-blue-500/20"
+                className="w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm text-slate-900 outline-none transition disabled:cursor-not-allowed disabled:opacity-60 focus:border-blue-400 focus:ring-2 focus:ring-blue-500/20"
               >
                 <option value="office">Trabaja en oficina</option>
                 <option value="remote">Teletrabajo</option>
@@ -174,22 +212,27 @@ export default function AdminDrawer({
             {showOfficeFields && (
               <div className="space-y-4">
                 <div>
-                  <label htmlFor="drawer-office" className="mb-2 block text-sm font-medium text-slate-700">
+                  <label
+                    htmlFor="drawer-office"
+                    className="mb-2 block text-sm font-medium text-slate-700"
+                  >
                     Oficina
                   </label>
                   <select
                     id="drawer-office"
                     value={officeValue}
+                    disabled={isSaving}
                     onChange={(e) => {
                       const newOffice = e.target.value;
-                      const firstRoom = officeRooms[newOffice]?.[0] || "";
+                      const nextRooms = getOfficeRoomsFromMaps(newOffice);
+                      const firstRoom = nextRooms[0] || "";
                       onDraftChange({
                         office: newOffice,
                         room: firstRoom,
                         deskId: "",
                       });
                     }}
-                    className="w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm text-slate-900 outline-none transition focus:border-blue-400 focus:ring-2 focus:ring-blue-500/20"
+                    className="w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm text-slate-900 outline-none transition disabled:cursor-not-allowed disabled:opacity-60 focus:border-blue-400 focus:ring-2 focus:ring-blue-500/20"
                   >
                     <option value="Toledo">Toledo</option>
                     <option value="Madrid">Madrid</option>
@@ -199,14 +242,18 @@ export default function AdminDrawer({
                 </div>
 
                 <div>
-                  <label htmlFor="drawer-room" className="mb-2 block text-sm font-medium text-slate-700">
+                  <label
+                    htmlFor="drawer-room"
+                    className="mb-2 block text-sm font-medium text-slate-700"
+                  >
                     Sala
                   </label>
                   <select
                     id="drawer-room"
                     value={draft.room || ""}
+                    disabled={isSaving}
                     onChange={(e) => onDraftChange({ room: e.target.value, deskId: "" })}
-                    className="w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm text-slate-900 outline-none transition focus:border-blue-400 focus:ring-2 focus:ring-blue-500/20"
+                    className="w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm text-slate-900 outline-none transition disabled:cursor-not-allowed disabled:opacity-60 focus:border-blue-400 focus:ring-2 focus:ring-blue-500/20"
                   >
                     {rooms.map((room) => (
                       <option key={room} value={room}>
@@ -217,25 +264,32 @@ export default function AdminDrawer({
                 </div>
 
                 <div>
-                  <label htmlFor="drawer-desk" className="mb-2 block text-sm font-medium text-slate-700">
+                  <label
+                    htmlFor="drawer-desk"
+                    className="mb-2 block text-sm font-medium text-slate-700"
+                  >
                     Mesa
                   </label>
                   <select
                     id="drawer-desk"
                     value={draft.deskId || ""}
-                    disabled={deskDisabled}
-                    onChange={(e) => onDraftChange({ deskId: e.target.value || null })}
-                    className="w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm text-slate-900 outline-none transition focus:border-blue-400 focus:ring-2 focus:ring-blue-500/20"
+                    disabled={deskDisabled || isSaving}
+                    onChange={(e) =>
+                      onDraftChange({
+                        deskId: e.target.value ? normalizeDeskId(e.target.value) : null,
+                      })
+                    }
+                    className="w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm text-slate-900 outline-none transition disabled:cursor-not-allowed disabled:opacity-60 focus:border-blue-400 focus:ring-2 focus:ring-blue-500/20"
                   >
                     <option value="">Sin seleccionar</option>
                     {desks.map((desk) => (
                       <option
                         key={desk.id}
                         value={desk.id}
-                        disabled={!desk.available && desk.id !== draft.deskId}
+                        disabled={desk.available === false && desk.id !== draft.deskId}
                       >
                         {desk.id}
-                        {desk.available ? "" : " · No disponible"}
+                        {desk.available === false ? " · No disponible" : ""}
                       </option>
                     ))}
                   </select>
@@ -245,28 +299,36 @@ export default function AdminDrawer({
 
             <div className="grid gap-4 sm:grid-cols-2">
               <div>
-                <label htmlFor="drawer-start-time" className="mb-2 block text-sm font-medium text-slate-700">
+                <label
+                  htmlFor="drawer-start-time"
+                  className="mb-2 block text-sm font-medium text-slate-700"
+                >
                   Hora de inicio
                 </label>
                 <input
                   id="drawer-start-time"
                   type="time"
                   value={draft.startTime || ""}
+                  disabled={isSaving}
                   onChange={(e) => onDraftChange({ startTime: e.target.value || null })}
-                  className="w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm text-slate-900 outline-none transition focus:border-blue-400 focus:ring-2 focus:ring-blue-500/20"
+                  className="w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm text-slate-900 outline-none transition disabled:cursor-not-allowed disabled:opacity-60 focus:border-blue-400 focus:ring-2 focus:ring-blue-500/20"
                 />
               </div>
 
               <div>
-                <label htmlFor="drawer-end-time" className="mb-2 block text-sm font-medium text-slate-700">
+                <label
+                  htmlFor="drawer-end-time"
+                  className="mb-2 block text-sm font-medium text-slate-700"
+                >
                   Hora de fin
                 </label>
                 <input
                   id="drawer-end-time"
                   type="time"
                   value={draft.endTime || ""}
+                  disabled={isSaving}
                   onChange={(e) => onDraftChange({ endTime: e.target.value || null })}
-                  className="w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm text-slate-900 outline-none transition focus:border-blue-400 focus:ring-2 focus:ring-blue-500/20"
+                  className="w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm text-slate-900 outline-none transition disabled:cursor-not-allowed disabled:opacity-60 focus:border-blue-400 focus:ring-2 focus:ring-blue-500/20"
                 />
               </div>
             </div>
@@ -276,7 +338,8 @@ export default function AdminDrawer({
             <button
               type="button"
               onClick={onClearDesk}
-              className="inline-flex items-center justify-center rounded-2xl border border-slate-200 bg-white px-4 py-2 text-sm font-medium text-slate-700 transition hover:bg-slate-100"
+              disabled={isSaving}
+              className="inline-flex items-center justify-center rounded-2xl border border-slate-200 bg-white px-4 py-2 text-sm font-medium text-slate-700 transition hover:bg-slate-100 disabled:cursor-not-allowed disabled:opacity-60"
             >
               Quitar mesa
             </button>
@@ -284,9 +347,10 @@ export default function AdminDrawer({
             <button
               type="button"
               onClick={onSave}
-              className="inline-flex items-center justify-center rounded-2xl bg-slate-900 px-5 py-3 text-sm font-semibold text-white transition hover:bg-slate-800"
+              disabled={isSaving}
+              className="inline-flex items-center justify-center rounded-2xl bg-slate-900 px-5 py-3 text-sm font-semibold text-white transition hover:bg-slate-800 disabled:cursor-not-allowed disabled:opacity-60"
             >
-              Guardar cambios
+              {isSaving ? "Guardando..." : "Guardar cambios"}
             </button>
           </div>
         </div>

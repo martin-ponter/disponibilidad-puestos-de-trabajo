@@ -52,6 +52,8 @@ const OFFICE_DESK_DATA = {
 };
 
 const CENTER_OPTIONS = ["Toledo", "Madrid", "Alcobendas", "Consuegra"];
+const DEFAULT_START_TIME = "09:00";
+const DEFAULT_END_TIME = "18:00";
 
 function formatHumanDate(dateString) {
 	const [year, month, day] = dateString.split("-");
@@ -120,8 +122,8 @@ export default function ReservationDayModal({
 	const [workStatus, setWorkStatus] = useState("works");
 	const [office, setOffice] = useState("");
 	const [room, setRoom] = useState("");
-	const [startTime, setStartTime] = useState("");
-	const [endTime, setEndTime] = useState("");
+	const [startTime, setStartTime] = useState(DEFAULT_START_TIME);
+	const [endTime, setEndTime] = useState(DEFAULT_END_TIME);
 	const [remote, setRemote] = useState(false);
 	const [event, setEvent] = useState(false);
 	const [selectedDesk, setSelectedDesk] = useState(null);
@@ -135,8 +137,8 @@ export default function ReservationDayModal({
 			setWorkStatus("works");
 			setOffice("");
 			setRoom("");
-			setStartTime("");
-			setEndTime("");
+			setStartTime(DEFAULT_START_TIME);
+			setEndTime(DEFAULT_END_TIME);
 			setRemote(false);
 			setEvent(false);
 			setSelectedDesk(null);
@@ -148,8 +150,8 @@ export default function ReservationDayModal({
 			setWorkStatus("not-works");
 			setOffice("");
 			setRoom("");
-			setStartTime("");
-			setEndTime("");
+			setStartTime(DEFAULT_START_TIME);
+			setEndTime(DEFAULT_END_TIME);
 			setRemote(false);
 			setEvent(false);
 			setSelectedDesk(null);
@@ -160,8 +162,8 @@ export default function ReservationDayModal({
 		setWorkStatus("works");
 		setOffice(typeof selectedEntry.center === "string" ? selectedEntry.center : "");
 		setRoom(selectedEntry.room || "");
-		setStartTime(normalizeTimeValue(selectedEntry.start));
-		setEndTime(normalizeTimeValue(selectedEntry.end));
+		setStartTime(normalizeTimeValue(selectedEntry.start) || DEFAULT_START_TIME);
+		setEndTime(normalizeTimeValue(selectedEntry.end) || DEFAULT_END_TIME);
 		setRemote(modeFromEntry === "remote");
 		setEvent(modeFromEntry === "event");
 		setSelectedDesk(modeFromEntry === "office" ? selectedEntry.resource || null : null);
@@ -247,12 +249,15 @@ export default function ReservationDayModal({
 	}, [office]);
 
 	const noDeskNeeded = remote || event;
+	const needsOffice = !remote;
+	const needsRoom = !remote && !event;
+
 	const canSaveWork =
 		workStatus === "works" &&
-		office &&
-		room &&
 		startTime &&
 		endTime &&
+		(!needsOffice || office) &&
+		(!needsRoom || room) &&
 		(noDeskNeeded || selectedDesk) &&
 		!loadingOccupied;
 
@@ -380,9 +385,12 @@ export default function ReservationDayModal({
 												setRoom("");
 												setSelectedDesk(null);
 											}}
-											className="w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm text-slate-900 outline-none transition focus:border-blue-400 focus:ring-2 focus:ring-blue-500/20"
+											disabled={remote}
+											className="w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm text-slate-900 outline-none transition disabled:cursor-not-allowed disabled:bg-slate-100 disabled:opacity-70 focus:border-blue-400 focus:ring-2 focus:ring-blue-500/20"
 										>
-											<option value="">Selecciona una oficina</option>
+											<option value="">
+												{remote ? "No es necesaria para teletrabajo" : "Selecciona una oficina"}
+											</option>
 											{CENTER_OPTIONS.map((option) => (
 												<option key={option} value={option}>
 													{option}
@@ -401,11 +409,15 @@ export default function ReservationDayModal({
 												setRoom(e.target.value);
 												setSelectedDesk(null);
 											}}
-											disabled={!office}
+											disabled={!office || noDeskNeeded}
 											className="w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm text-slate-900 outline-none transition disabled:cursor-not-allowed disabled:bg-slate-100 disabled:opacity-70 focus:border-blue-400 focus:ring-2 focus:ring-blue-500/20"
 										>
 											<option value="">
-												{office ? "Selecciona una sala" : "Primero elige una oficina"}
+												{!office
+													? "Primero elige una oficina"
+													: noDeskNeeded
+														? "No es necesaria para teletrabajo o evento"
+														: "Selecciona una sala"}
 											</option>
 											{roomOptions.map((option) => (
 												<option key={option} value={option}>
@@ -441,6 +453,12 @@ export default function ReservationDayModal({
 										</div>
 									</div>
 
+									<div className="rounded-2xl border border-blue-200 bg-blue-50 p-4">
+										<p className="text-sm leading-6 text-blue-800">
+											Por defecto se propone una jornada completa de 09:00 a 18:00. Puedes cambiarla si lo necesitas.
+										</p>
+									</div>
+
 									<div className="rounded-2xl border border-slate-200 bg-white p-4">
 										<p className="mb-3 text-sm font-medium text-slate-700">Tipo de jornada</p>
 
@@ -450,7 +468,11 @@ export default function ReservationDayModal({
 												onChange={(e) => {
 													const checked = e.target.checked;
 													setRemote(checked);
-													if (checked) setEvent(false);
+													if (checked) {
+														setEvent(false);
+														setOffice("");
+														setRoom("");
+													}
 													setSelectedDesk(null);
 												}}
 												type="checkbox"
@@ -472,7 +494,10 @@ export default function ReservationDayModal({
 												onChange={(e) => {
 													const checked = e.target.checked;
 													setEvent(checked);
-													if (checked) setRemote(false);
+													if (checked) {
+														setRemote(false);
+														setRoom("");
+													}
 													setSelectedDesk(null);
 												}}
 												type="checkbox"
@@ -498,7 +523,9 @@ export default function ReservationDayModal({
 										<p className="mt-1 text-sm text-slate-500">
 											{office && room
 												? `${office} · ${room}`
-												: "Selecciona una oficina y una sala para visualizar el plano."}
+												: noDeskNeeded
+													? "Sin necesidad de mesa"
+													: "Selecciona una oficina y una sala para visualizar el plano."}
 										</p>
 										{loadingOccupied && !noDeskNeeded ? (
 											<p className="mt-1 text-xs text-slate-400">

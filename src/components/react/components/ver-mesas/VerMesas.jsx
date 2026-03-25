@@ -1,4 +1,7 @@
-import React, { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
+import UserCard from "../compañeros/CardIndividual.jsx";
+
+const FIELD_EMPLOYEE = "ufCrm22_1774265772";
 
 export default function ViewDesksReact({
 	officeRooms,
@@ -22,6 +25,10 @@ export default function ViewDesksReact({
 	const [enumMaps, setEnumMaps] = useState({});
 	const [bitrixReady, setBitrixReady] = useState(false);
 	const [occupiedDeskIds, setOccupiedDeskIds] = useState([]);
+	const [deskAssignments, setDeskAssignments] = useState({});
+	const [usersById, setUsersById] = useState({});
+	const [hoveredDeskId, setHoveredDeskId] = useState("");
+	const [hoverCard, setHoverCard] = useState(null);
 	const [status, setStatus] = useState("empty");
 	const [subtitle, setSubtitle] = useState(
 		"Selecciona oficina, sala y día para visualizar el plano."
@@ -36,6 +43,16 @@ export default function ViewDesksReact({
 	}, [time]);
 
 	const canRenderMap = Boolean(office && room && date);
+
+	const hoveredAssignment = useMemo(() => {
+		if (!hoveredDeskId) return null;
+		return deskAssignments[hoveredDeskId] || null;
+	}, [hoveredDeskId, deskAssignments]);
+
+	const hoveredUser = useMemo(() => {
+		if (!hoveredAssignment?.userId) return {};
+		return usersById[hoveredAssignment.userId] || {};
+	}, [hoveredAssignment, usersById]);
 
 	useEffect(() => {
 		const today = new Date();
@@ -53,9 +70,19 @@ export default function ViewDesksReact({
 
 		window.BX24.init(async () => {
 			try {
-				const fieldsResponse = await callBitrix("crm.item.fields", {
-					entityTypeId: ENTITY_TYPE_ID,
+				const [fieldsResponse, users] = await Promise.all([
+					callBitrix("crm.item.fields", {
+						entityTypeId: ENTITY_TYPE_ID,
+					}),
+					getAllUsers(),
+				]);
+
+				const userMap = {};
+				(users || []).forEach((user) => {
+					userMap[String(user.ID)] = user;
 				});
+
+				setUsersById(userMap);
 
 				setEnumMaps(
 					createEnumMaps(fieldsResponse?.fields || {}, {
@@ -77,6 +104,9 @@ export default function ViewDesksReact({
 	useEffect(() => {
 		setRoom("");
 		setOccupiedDeskIds([]);
+		setDeskAssignments({});
+		setHoveredDeskId("");
+		setHoverCard(null);
 		setStatus("empty");
 		setSubtitle("Selecciona oficina, sala y día para visualizar el plano.");
 	}, [office]);
@@ -84,6 +114,9 @@ export default function ViewDesksReact({
 	useEffect(() => {
 		if (!canRenderMap) {
 			setOccupiedDeskIds([]);
+			setDeskAssignments({});
+			setHoveredDeskId("");
+			setHoverCard(null);
 			setStatus("empty");
 			setSubtitle("Selecciona oficina, sala y día para visualizar el plano.");
 			return;
@@ -91,6 +124,9 @@ export default function ViewDesksReact({
 
 		if (!bitrixReady || !window.BX24) {
 			setOccupiedDeskIds([]);
+			setDeskAssignments({});
+			setHoveredDeskId("");
+			setHoverCard(null);
 			setStatus("empty");
 			setSubtitle("Bitrix no está listo todavía.");
 			return;
@@ -103,13 +139,14 @@ export default function ViewDesksReact({
 			setSubtitle(`${office} · ${room} · ${formatHumanDate(date)} · ${effectiveTime}`);
 
 			try {
-				const deskIds = await getOccupiedDeskIds({
+				const assignments = await getOccupiedDeskAssignments({
 					office,
 					room,
 					date,
 					time: effectiveTime,
 					enumMaps,
 					ENTITY_TYPE_ID,
+					FIELD_EMPLOYEE,
 					FIELD_CENTER,
 					FIELD_ROOM,
 					FIELD_RESOURCE,
@@ -123,12 +160,22 @@ export default function ViewDesksReact({
 
 				if (cancelled) return;
 
+				const deskIds = Object.keys(assignments);
+
+				setDeskAssignments(assignments);
 				setOccupiedDeskIds(deskIds);
+				setHoveredDeskId((currentHovered) =>
+					assignments[currentHovered] ? currentHovered : ""
+				);
+				setHoverCard(null);
 				setStatus("ready");
 			} catch (error) {
 				console.error("Error cargando ocupación de mesas:", error);
 				if (cancelled) return;
 				setOccupiedDeskIds([]);
+				setDeskAssignments({});
+				setHoveredDeskId("");
+				setHoverCard(null);
 				setStatus("empty");
 				setSubtitle("No se pudo cargar la ocupación real de las mesas.");
 			}
@@ -168,36 +215,82 @@ export default function ViewDesksReact({
 	const customMap = mapKey ? customMaps[mapKey] : null;
 	const genericDesks = office ? genericOfficeDeskData[office] || [] : [];
 
+	function getHoverCardPosition(event) {
+		const offset = 18;
+		const cardWidth = 340;
+		const cardHeight = 260;
+
+		let x = event.clientX + offset;
+		let y = event.clientY + offset;
+
+		const maxX = window.innerWidth - cardWidth - 16;
+		const maxY = window.innerHeight - cardHeight - 16;
+
+		if (x > maxX) {
+			x = event.clientX - cardWidth - offset;
+		}
+
+		if (y > maxY) {
+			y = Math.max(16, maxY);
+		}
+
+		return {
+			left: Math.max(16, x),
+			top: Math.max(16, y),
+		};
+	}
+
+	function handleDeskMouseEnter(deskId, event) {
+		const normalizedDeskId = normalizeDeskId(deskId);
+		if (!deskAssignments[normalizedDeskId]) return;
+
+		setHoveredDeskId(normalizedDeskId);
+		setHoverCard(getHoverCardPosition(event));
+	}
+
+	function handleDeskMouseMove(deskId, event) {
+		const normalizedDeskId = normalizeDeskId(deskId);
+		if (!deskAssignments[normalizedDeskId]) return;
+
+		setHoverCard(getHoverCardPosition(event));
+	}
+
+	function handleDeskMouseLeave(deskId) {
+		const normalizedDeskId = normalizeDeskId(deskId);
+		if (hoveredDeskId === normalizedDeskId) {
+			setHoveredDeskId("");
+			setHoverCard(null);
+		}
+	}
+
 	return (
 		<main className="min-h-screen bg-slate-50 text-slate-900">
 			<section className="relative overflow-hidden">
 				<div className="absolute inset-0 bg-[radial-gradient(circle_at_top_left,rgba(59,130,246,0.08),transparent_30%),radial-gradient(circle_at_bottom_right,rgba(168,85,247,0.06),transparent_28%)]" />
 
 				<div className="relative mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
-					<div className="mb-8 flex items-center justify-between gap-4">
-						<a
-							href="/"
-							className="inline-flex items-center gap-2 rounded-2xl border border-slate-200 bg-white px-4 py-2.5 text-sm font-medium text-slate-700 shadow-sm transition hover:border-slate-300 hover:bg-slate-100"
-						>
-							<span>←</span>
-							Volver
-						</a>
-
-						<div className="rounded-full border border-slate-200 bg-white px-4 py-2 text-sm font-medium text-slate-600 shadow-sm">
-							Consulta de mesas
+					<div className="flex flex-row-reverse justify-between pt-5 pb-2">
+						<div className="mb-8 flex h-min justify-between gap-4">
+							<a
+								href="/"
+								className="inline-flex items-center gap-2 rounded-2xl border border-slate-200 bg-white px-4 py-2.5 text-sm font-medium text-slate-700 shadow-sm transition hover:border-slate-300 hover:bg-slate-100"
+							>
+								<span>←</span>
+								Volver
+							</a>
 						</div>
-					</div>
 
-					<div className="mb-8">
-						<h1 className="text-3xl font-semibold tracking-tight text-slate-900 sm:text-4xl lg:text-5xl">
-							Ver mesas por oficina y sala
-						</h1>
+						<div className="mb-8">
+							<h1 className="text-3xl font-semibold tracking-tight text-slate-900 sm:text-4xl lg:text-5xl">
+								Ver mesas por oficina y sala
+							</h1>
 
-						<p className="mt-4 max-w-3xl text-sm leading-7 text-slate-600 sm:text-base">
-							Selecciona oficina, sala y día. La hora es opcional: si no la
-							indicas, se tomará automáticamente la hora actual para mostrar el
-							estado del mapa.
-						</p>
+							<p className="mt-4 max-w-3xl text-sm leading-7 text-slate-600 sm:text-base">
+								Selecciona oficina, sala y día. La hora es opcional: si no la
+								indicas, se tomará automáticamente la hora actual para mostrar el
+								estado del mapa.
+							</p>
+						</div>
 					</div>
 
 					<div className="grid gap-6 xl:grid-cols-[380px_minmax(0,1fr)]">
@@ -344,8 +437,7 @@ export default function ViewDesksReact({
 								</div>
 
 								<div
-									className={`rounded-full border border-blue-200 bg-blue-50 px-4 py-2 text-sm font-medium text-blue-700 ${canRenderMap ? "" : "hidden"
-										}`}
+									className={`rounded-full border border-blue-200 bg-blue-50 px-4 py-2 text-sm font-medium text-blue-700 ${canRenderMap ? "" : "hidden"}`}
 								>
 									Hora aplicada: <span>{effectiveTime}</span>
 								</div>
@@ -386,21 +478,21 @@ export default function ViewDesksReact({
 							)}
 
 							{status === "ready" && (
-								<div className="overflow-hidden rounded-[28px] border border-slate-200 bg-slate-50 p-4 sm:p-6">
+								<div className="overflow-visible rounded-[28px] border border-slate-200 bg-slate-50 p-4 sm:p-6">
 									<div className="mb-4 flex flex-wrap items-center justify-between gap-3">
 										<div className="rounded-2xl bg-white px-4 py-2 text-sm text-slate-600 shadow-sm">
 											Plano de ocupación
 										</div>
 										<div className="rounded-2xl border border-slate-200 bg-white px-4 py-2 text-sm text-slate-600">
-											Vista informativa de ocupación
+											Pasa el cursor por una mesa ocupada
 										</div>
 									</div>
 
-									<div className="flex min-h-[420px] items-center justify-center rounded-[24px] border border-slate-200 bg-gradient-to-br from-slate-100 to-white p-4 sm:min-h-[520px] sm:p-6">
+									<div className="relative flex min-h-[420px] items-center justify-center rounded-[24px] border border-slate-200 bg-gradient-to-br from-slate-100 to-white p-4 sm:min-h-[520px] sm:p-6 overflow-visible">
 										{customMap ? (
 											<div className="mx-auto flex w-full justify-center">
 												<div
-													className="relative w-full max-w-[720px] overflow-hidden rounded-[24px] border border-slate-200 bg-gradient-to-br from-slate-100 to-white"
+													className="relative w-full max-w-[720px] overflow-visible rounded-[24px] border border-slate-200 bg-gradient-to-br from-slate-100 to-white"
 													style={{
 														aspectRatio: `${customMap.width} / ${customMap.height}`,
 														maxHeight: "calc(100vh - 320px)",
@@ -432,8 +524,7 @@ export default function ViewDesksReact({
 																return (
 																	<div
 																		key={feature.id}
-																		className={`absolute border border-slate-300 bg-transparent ${feature.rounded ? "rounded-[24px]" : ""
-																			}`}
+																		className={`absolute border border-slate-300 bg-transparent ${feature.rounded ? "rounded-[24px]" : ""}`}
 																		style={style}
 																	/>
 																);
@@ -453,16 +544,17 @@ export default function ViewDesksReact({
 														})}
 
 													{customMap.desks.map((desk) => {
-														const isAvailable = !occupiedSet.has(
-															normalizeDeskId(desk.id)
-														);
+														const normalizedDeskId = normalizeDeskId(desk.id);
+														const isAvailable = !occupiedSet.has(normalizedDeskId);
+														const isHovered = hoveredDeskId === normalizedDeskId;
 
 														return (
-															<button
+															<div
 																key={desk.id}
-																type="button"
-																disabled
-																className={getDeskCardClasses(isAvailable)}
+																onMouseEnter={(e) => handleDeskMouseEnter(desk.id, e)}
+																onMouseMove={(e) => handleDeskMouseMove(desk.id, e)}
+																onMouseLeave={() => handleDeskMouseLeave(desk.id)}
+																className={`${getDeskCardClasses(isAvailable)} ${isHovered ? "ring-2 ring-slate-400" : ""} ${!isAvailable ? "cursor-pointer" : "cursor-default"}`}
 																style={{
 																	left: pct(desk.x, customMap.width),
 																	top: pct(desk.y, customMap.height),
@@ -473,13 +565,13 @@ export default function ViewDesksReact({
 																<div className="flex flex-col items-center justify-center px-1 text-center leading-tight">
 																	<span>{desk.id}</span>
 																</div>
-															</button>
+															</div>
 														);
 													})}
 												</div>
 											</div>
 										) : (
-											<div className="relative w-full rounded-[24px] border border-slate-200 bg-gradient-to-br from-slate-100 to-white p-4 sm:min-h-[520px] sm:p-6">
+											<div className="relative w-full rounded-[24px] border border-slate-200 bg-gradient-to-br from-slate-100 to-white p-4 sm:min-h-[520px] sm:p-6 overflow-visible">
 												<div className="absolute left-4 top-4 rounded-xl border border-slate-200 bg-white px-3 py-2 text-xs text-slate-600 sm:left-6 sm:top-6">
 													Entrada
 												</div>
@@ -493,16 +585,17 @@ export default function ViewDesksReact({
 
 												<div className="grid min-h-[360px] grid-cols-2 gap-4 pt-20 sm:grid-cols-3 lg:grid-cols-4">
 													{genericDesks.map((desk) => {
-														const isAvailable = !occupiedSet.has(
-															normalizeDeskId(desk.id)
-														);
+														const normalizedDeskId = normalizeDeskId(desk.id);
+														const isAvailable = !occupiedSet.has(normalizedDeskId);
+														const isHovered = hoveredDeskId === normalizedDeskId;
 
 														return (
-															<button
+															<div
 																key={desk.id}
-																type="button"
-																disabled
-																className={getGenericDeskClasses(isAvailable)}
+																onMouseEnter={(e) => handleDeskMouseEnter(desk.id, e)}
+																onMouseMove={(e) => handleDeskMouseMove(desk.id, e)}
+																onMouseLeave={() => handleDeskMouseLeave(desk.id)}
+																className={`${getGenericDeskClasses(isAvailable)} ${isHovered ? "ring-2 ring-slate-400" : ""} ${!isAvailable ? "cursor-pointer" : "cursor-default"}`}
 															>
 																<div className="flex flex-col items-center justify-center gap-2">
 																	<span className="text-base">{desk.id}</span>
@@ -515,12 +608,37 @@ export default function ViewDesksReact({
 																		{isAvailable ? "Disponible" : "Ocupada"}
 																	</span>
 																</div>
-															</button>
+															</div>
 														);
 													})}
 												</div>
 											</div>
 										)}
+
+										{hoveredAssignment && hoverCard ? (
+											<div
+												className="fixed z-50 w-[340px] pointer-events-none"
+												style={{
+													left: `${hoverCard.left}px`,
+													top: `${hoverCard.top}px`,
+												}}
+											>
+												<div className="mb-2 rounded-2xl border border-slate-200 bg-white px-4 py-2 shadow-lg">
+													<p className="text-sm font-semibold text-slate-900">
+														Mesa {hoveredDeskId}
+													</p>
+													<p className="text-xs text-slate-500">
+														Reserva activa a las {effectiveTime}
+													</p>
+												</div>
+
+												<UserCard
+													user={hoveredUser}
+													entry={hoveredAssignment.entry}
+													selectedTime={effectiveTime}
+												/>
+											</div>
+										) : null}
 									</div>
 								</div>
 							)}
@@ -663,13 +781,59 @@ function callBitrix(method, params = {}) {
 	});
 }
 
-async function getOccupiedDeskIds({
+function getAllUsers() {
+	return new Promise((resolve, reject) => {
+		let allUsers = [];
+
+		window.BX24.callMethod(
+			"user.get",
+			{
+				FILTER: {
+					ACTIVE: true,
+				},
+			},
+			function handleResult(result) {
+				if (result.error()) {
+					reject(result.error());
+					return;
+				}
+
+				const pageData = result.data() || [];
+				allUsers = allUsers.concat(pageData);
+
+				if (result.more()) {
+					result.next();
+					return;
+				}
+
+				resolve(allUsers);
+			}
+		);
+	});
+}
+
+function normalizeEntry(entry, enumMaps, keys) {
+	return {
+		...entry,
+		[keys.FIELD_CENTER]: resolveEnumLabel(enumMaps, keys.FIELD_CENTER, entry[keys.FIELD_CENTER]),
+		[keys.FIELD_ROOM]: resolveEnumLabel(enumMaps, keys.FIELD_ROOM, entry[keys.FIELD_ROOM]),
+		[keys.FIELD_RESOURCE_TYPE]: resolveEnumLabel(
+			enumMaps,
+			keys.FIELD_RESOURCE_TYPE,
+			entry[keys.FIELD_RESOURCE_TYPE]
+		),
+		[keys.FIELD_STATUS]: resolveEnumLabel(enumMaps, keys.FIELD_STATUS, entry[keys.FIELD_STATUS]),
+	};
+}
+
+async function getOccupiedDeskAssignments({
 	office,
 	room,
 	date,
 	time,
 	enumMaps,
 	ENTITY_TYPE_ID,
+	FIELD_EMPLOYEE,
 	FIELD_CENTER,
 	FIELD_ROOM,
 	FIELD_RESOURCE,
@@ -681,13 +845,14 @@ async function getOccupiedDeskIds({
 	FIELD_NOTES,
 }) {
 	const centerValue = resolveEnumId(enumMaps, FIELD_CENTER, office);
-	const roomValueForFilter =
-		resolveEnumId(enumMaps, FIELD_ROOM, room) ?? room;
+	const roomValueForFilter = resolveEnumId(enumMaps, FIELD_ROOM, room) ?? room;
 
 	const data = await callBitrix("crm.item.list", {
 		entityTypeId: ENTITY_TYPE_ID,
 		select: [
 			"id",
+			"title",
+			FIELD_EMPLOYEE,
 			FIELD_CENTER,
 			FIELD_ROOM,
 			FIELD_RESOURCE,
@@ -706,73 +871,79 @@ async function getOccupiedDeskIds({
 	});
 
 	const items = data?.items || [];
+	const assignments = {};
 
-	return items
-		.filter((item) => {
-			const statusLabel = String(
-				resolveEnumLabel(enumMaps, FIELD_STATUS, item[FIELD_STATUS]) ?? ""
-			).toLowerCase();
+	items.forEach((item) => {
+		const statusLabel = String(
+			resolveEnumLabel(enumMaps, FIELD_STATUS, item[FIELD_STATUS]) ?? ""
+		).toLowerCase();
 
-			const resourceTypeLabel = String(
-				resolveEnumLabel(
-					enumMaps,
-					FIELD_RESOURCE_TYPE,
-					item[FIELD_RESOURCE_TYPE]
-				) ?? ""
-			).toLowerCase();
+		const resourceTypeLabel = String(
+			resolveEnumLabel(enumMaps, FIELD_RESOURCE_TYPE, item[FIELD_RESOURCE_TYPE]) ?? ""
+		).toLowerCase();
 
-			const roomLabel = String(
-				resolveEnumLabel(enumMaps, FIELD_ROOM, item[FIELD_ROOM]) ?? ""
-			).toLowerCase();
+		const roomLabel = String(
+			resolveEnumLabel(enumMaps, FIELD_ROOM, item[FIELD_ROOM]) ?? ""
+		).toLowerCase();
 
-			const resource = String(item[FIELD_RESOURCE] ?? "").trim();
-			const resourceNormalized = resource.toLowerCase();
-			const notes = String(item[FIELD_NOTES] ?? "").toLowerCase();
+		const resource = String(item[FIELD_RESOURCE] ?? "").trim();
+		const resourceNormalized = resource.toLowerCase();
+		const notes = String(item[FIELD_NOTES] ?? "").toLowerCase();
 
-			if (statusLabel === "cancelada") return false;
-			if (statusLabel === "bloqueada") return false;
-			if (notes.includes("no trabaja")) return false;
+		if (statusLabel === "cancelada") return;
+		if (statusLabel === "bloqueada") return;
+		if (notes.includes("no trabaja")) return;
 
-			if (
-				resourceTypeLabel === "sala" ||
-				resourceNormalized.includes("evento") ||
-				roomLabel.includes("evento") ||
-				notes.includes("evento")
-			) {
-				return false;
-			}
+		if (
+			resourceTypeLabel === "sala" ||
+			resourceNormalized.includes("evento") ||
+			roomLabel.includes("evento") ||
+			notes.includes("evento")
+		) {
+			return;
+		}
 
-			if (
-				resourceNormalized.includes("teletrabajo") ||
-				roomLabel.includes("teletrabajo") ||
-				notes.includes("teletrabajo") ||
-				notes.includes("remoto")
-			) {
-				return false;
-			}
+		if (
+			resourceNormalized.includes("teletrabajo") ||
+			roomLabel.includes("teletrabajo") ||
+			notes.includes("teletrabajo") ||
+			notes.includes("remoto")
+		) {
+			return;
+		}
 
-			if (
-				resourceNormalized.includes("ausencia") ||
-				resourceNormalized.includes("vacaciones")
-			) {
-				return false;
-			}
+		if (
+			resourceNormalized.includes("ausencia") ||
+			resourceNormalized.includes("vacaciones")
+		) {
+			return;
+		}
 
-			const start = normalizeTimeValue(item[FIELD_START]);
-			const end = normalizeTimeValue(item[FIELD_END]);
+		const start = normalizeTimeValue(item[FIELD_START]);
+		const end = normalizeTimeValue(item[FIELD_END]);
 
-			if (!resource) return false;
+		if (!resource) return;
 
-			if (!start && !end) {
-				return true;
-			}
+		if (start && end && !pointInRange(time, start, end)) {
+			return;
+		}
 
-			if (!start || !end) {
-				return false;
-			}
+		const deskId = normalizeDeskId(resource);
+		const normalized = normalizeEntry(item, enumMaps, {
+			FIELD_CENTER,
+			FIELD_ROOM,
+			FIELD_RESOURCE_TYPE,
+			FIELD_STATUS,
+		});
 
-			return pointInRange(time, start, end);
-		})
-		.map((item) => normalizeDeskId(item[FIELD_RESOURCE]))
-		.filter(Boolean);
+		const existing = assignments[deskId];
+		if (!existing || Number(item.id) > Number(existing.entry.id)) {
+			assignments[deskId] = {
+				userId: String(item[FIELD_EMPLOYEE] ?? ""),
+				entry: normalized,
+			};
+		}
+	});
+
+	return assignments;
 }

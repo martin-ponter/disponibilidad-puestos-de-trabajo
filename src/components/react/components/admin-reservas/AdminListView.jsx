@@ -6,7 +6,7 @@ export default function AdminListView({
   getStatusMeta,
 }) {
   return (
-    <div className="rounded-3xl border border-slate-200 bg-white p-5 shadow-xl shadow-slate-200/70 sm:p-6">
+    <div className="rounded-3xl border border-slate-200 bg-white p-5 shadow-xl shadow-slate-200/70 sm:p-6 max-h-screen">
       <div className="mb-5">
         <h2 className="text-lg font-semibold text-slate-900">Lista de asignaciones</h2>
         <p className="mt-1 text-sm text-slate-500">
