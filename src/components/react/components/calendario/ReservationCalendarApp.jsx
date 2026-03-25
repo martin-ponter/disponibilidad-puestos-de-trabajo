@@ -58,6 +58,28 @@ function normalizeBitrixDate(value) {
 	return formatDate(date);
 }
 
+function normalizeTimeValue(value) {
+	if (!value) return "";
+	if (/^\d{2}:\d{2}$/.test(value)) return value;
+
+	const date = new Date(value);
+	if (Number.isNaN(date.getTime())) return "";
+
+	const hours = String(date.getHours()).padStart(2, "0");
+	const minutes = String(date.getMinutes()).padStart(2, "0");
+	return `${hours}:${minutes}`;
+}
+
+function toMinutes(value) {
+	if (!value) return 0;
+	const [hours, minutes] = value.split(":").map(Number);
+	return hours * 60 + minutes;
+}
+
+function rangesOverlap(startA, endA, startB, endB) {
+	return toMinutes(startA) < toMinutes(endB) && toMinutes(endA) > toMinutes(startB);
+}
+
 function toBitrixDateTime(dateString, timeString) {
 	const [year, month, day] = dateString.split("-").map(Number);
 	const [hours, minutes] = timeString.split(":").map(Number);
@@ -353,6 +375,80 @@ export default function ReservationCalendarApp() {
 		setEntries(normalizedItems);
 	}
 
+	async function getOccupiedDeskIds({
+		date,
+		office,
+		room,
+		startTime,
+		endTime,
+		excludeEntryId,
+	}) {
+		if (!date || !office || !room || !startTime || !endTime) {
+			return [];
+		}
+
+		const centerValue = resolveEnumId(enumMaps, FIELD_CENTER, office);
+
+		const data = await callBitrix("crm.item.list", {
+			entityTypeId: ENTITY_TYPE_ID,
+			select: [
+				"id",
+				FIELD_CENTER,
+				FIELD_ROOM,
+				FIELD_RESOURCE,
+				FIELD_RESOURCE_TYPE,
+				FIELD_DATE,
+				FIELD_START,
+				FIELD_END,
+				FIELD_STATUS,
+				FIELD_NOTES,
+			],
+			filter: {
+				[FIELD_DATE]: date,
+				[FIELD_CENTER]: centerValue,
+				[FIELD_ROOM]: room,
+			},
+		});
+
+		const items = data?.items || [];
+
+		return items
+			.filter((item) => {
+				if (excludeEntryId && Number(item.id) === Number(excludeEntryId)) {
+					return false;
+				}
+
+				const status = String(
+					resolveEnumLabel(enumMaps, FIELD_STATUS, item[FIELD_STATUS]) ?? ""
+				).toLowerCase();
+
+				if (status === "cancelada") {
+					return false;
+				}
+
+				const resource = String(item[FIELD_RESOURCE] ?? "").trim();
+				if (
+					!resource ||
+					resource.toLowerCase() === "teletrabajo" ||
+					resource.toLowerCase() === "evento" ||
+					resource.toLowerCase() === "ausencia"
+				) {
+					return false;
+				}
+
+				const itemStart = normalizeTimeValue(item[FIELD_START]);
+				const itemEnd = normalizeTimeValue(item[FIELD_END]);
+
+				if (!itemStart || !itemEnd) {
+					return false;
+				}
+
+				return rangesOverlap(startTime, endTime, itemStart, itemEnd);
+			})
+			.map((item) => String(item[FIELD_RESOURCE]))
+			.filter(Boolean);
+	}
+
 	useEffect(() => {
 		if (!window.BX24) {
 			setError("BX24 no está disponible en la ventana.");
@@ -439,6 +535,26 @@ export default function ReservationCalendarApp() {
 
 	async function handleSaveWork(payload) {
 		try {
+			if (!payload.remote && !payload.event && payload.selectedDesk) {
+				const occupiedDeskIds = await getOccupiedDeskIds({
+					date: payload.date,
+					office: payload.office,
+					room: payload.room,
+					startTime: payload.startTime,
+					endTime: payload.endTime,
+					excludeEntryId: payload.editingEntry?.id,
+				});
+
+				if (occupiedDeskIds.includes(String(payload.selectedDesk))) {
+					openConfirmation(
+						false,
+						"Mesa no disponible",
+						`La mesa ${payload.selectedDesk} ya está ocupada en ese tramo horario.`
+					);
+					return;
+				}
+			}
+
 			const centerValue = resolveEnumId(enumMaps, FIELD_CENTER, payload.office);
 			const resourceTypeValue = resolveEnumId(
 				enumMaps,
@@ -513,22 +629,17 @@ export default function ReservationCalendarApp() {
 
 	async function handleSaveAbsence(payload) {
 		try {
-			const existingCenter =
-				payload.editingEntry?.center && typeof payload.editingEntry.center === "string"
-					? payload.editingEntry.center
-					: "Toledo";
-
 			const fields = {
 				title: payload.editingEntry?.title || `Ausencia ${payload.date}`,
 				[FIELD_EMPLOYEE]: Number(currentUser.ID),
-				[FIELD_CENTER]: resolveEnumId(enumMaps, FIELD_CENTER, existingCenter),
-				[FIELD_ROOM]: payload.editingEntry?.room || "Sin sala",
+				[FIELD_CENTER]: null,
+				[FIELD_ROOM]: "",
 				[FIELD_RESOURCE]: "Ausencia",
 				[FIELD_RESOURCE_TYPE]: resolveEnumId(enumMaps, FIELD_RESOURCE_TYPE, "puesto"),
 				[FIELD_BOOKING_MODE]: resolveEnumId(enumMaps, FIELD_BOOKING_MODE, "individual"),
 				[FIELD_DATE]: payload.date,
-				[FIELD_START]: toBitrixDateTime(payload.date, "09:00"),
-				[FIELD_END]: toBitrixDateTime(payload.date, "18:00"),
+				[FIELD_START]: null,
+				[FIELD_END]: null,
 				[FIELD_STATUS]: resolveEnumId(enumMaps, FIELD_STATUS, "cancelada"),
 				[FIELD_NOTES]: "no trabaja",
 				[FIELD_FULL_DAY]: "Y",
@@ -577,10 +688,12 @@ export default function ReservationCalendarApp() {
 				id: Number(entryId),
 			});
 
+			setEntries((prev) => prev.filter((item) => Number(item.id) !== Number(entryId)));
+
 			await reloadEntries(currentUser.ID);
 
 			setIsDayModalOpen(false);
-			setSelectedDate(entryDate ?? null);
+			setSelectedDate(null);
 
 			openConfirmation(
 				true,
@@ -690,10 +803,11 @@ export default function ReservationCalendarApp() {
 				onSaveWork={handleSaveWork}
 				onSaveAbsence={handleSaveAbsence}
 				onDelete={handleDelete}
+				getOccupiedDeskIds={getOccupiedDeskIds}
 			/>
 
 			{confirmation ? (
-				<div className="fixed inset-0 z-[60] flex items-center justify-center bg-slate-900/30 p-4 backdrop-blur-sm">
+				<div className="fixed inset-0 z-60 flex items-center justify-center bg-slate-900/30 p-4 backdrop-blur-sm">
 					<div className="w-full max-w-md rounded-3xl border border-slate-200 bg-white p-6 shadow-2xl">
 						<div
 							className={`mb-4 flex h-14 w-14 items-center justify-center rounded-2xl text-2xl ${confirmation.success ? "bg-emerald-100" : "bg-rose-100"

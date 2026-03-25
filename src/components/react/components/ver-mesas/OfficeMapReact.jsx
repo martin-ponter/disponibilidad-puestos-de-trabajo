@@ -1,41 +1,5 @@
 import React from "react";
-import { officeMaps } from "../../data/maps/office-maps.js";
-
-const CUSTOM_DESK_STATES = {
-	"Toledo::Sala Laboral-Fiscal": {
-		"TOL-14": { available: true },
-		"TOL-15": { available: false },
-		"TOL-12": { available: true },
-		"TOL-13": { available: true },
-		"TOL-10": { available: true },
-		"TOL-11": { available: true },
-		"TOL-08": { available: false },
-		"TOL-09": { available: true },
-		"TOL-06": { available: true },
-		"TOL-07": { available: true },
-		"TOL-04": { available: true },
-		"TOL-05": { available: true },
-		"TOL-02": { available: true },
-		"TOL-03": { available: true },
-	},
-	"Toledo::Sala Jurídico": {
-		"TOL-17": { available: true },
-		"TOL-19": { available: false },
-		"TOL-21": { available: true },
-		"TOL-16": { available: true },
-		"TOL-18": { available: true },
-		"TOL-20": { available: false },
-	},
-	"Toledo::Sala Reuniones Toledo": {
-		"TOL-23": { available: true },
-	},
-	"Toledo::Despacho Luis": {
-		"TOL-22": { available: true },
-	},
-	"Toledo::Despacho Belén": {
-		"TOL-24": { available: true },
-	},
-};
+import { officeMaps } from "../../../../data/maps/office-maps.js";
 
 function pct(value, total) {
 	return `${(value / total) * 100}%`;
@@ -59,13 +23,14 @@ function getDeskClasses(available, isSelected) {
 export default function OfficeMapReact({
 	office,
 	room,
-	genericDeskData,
+	genericDeskData = [],
 	selectedDesk,
 	onSelectDesk,
+	occupiedDeskIds = [],
 }) {
 	const mapKey = office && room ? `${office}::${room}` : "";
 	const customMap = mapKey ? officeMaps[mapKey] : null;
-	const customStates = CUSTOM_DESK_STATES[mapKey] || {};
+	const occupiedSet = new Set((occupiedDeskIds || []).map(String));
 
 	if (!office || !room) return null;
 
@@ -73,7 +38,7 @@ export default function OfficeMapReact({
 		return (
 			<div className="mx-auto flex w-full justify-center">
 				<div
-					className="relative w-full max-w-[720px] overflow-hidden rounded-[24px] border border-slate-200 bg-gradient-to-br from-slate-100 to-white"
+					className="relative w-full max-w-180 overflow-hidden rounded-3xl border border-slate-200 bg-linear-to-br from-slate-100 to-white"
 					style={{
 						aspectRatio: `${customMap.width} / ${customMap.height}`,
 						maxHeight: "calc(100vh - 340px)",
@@ -105,9 +70,8 @@ export default function OfficeMapReact({
 								return (
 									<div
 										key={feature.id}
-										className={`absolute border border-slate-300 bg-transparent ${
-											feature.rounded ? "rounded-[24px]" : ""
-										}`}
+										className={`absolute border border-slate-300 bg-transparent ${feature.rounded ? "rounded-3xl" : ""
+											}`}
 										style={style}
 									/>
 								);
@@ -127,8 +91,7 @@ export default function OfficeMapReact({
 						})}
 
 					{customMap.desks.map((desk) => {
-						const state = customStates[desk.id] ?? { available: true };
-						const isAvailable = state.available !== false;
+						const isAvailable = !occupiedSet.has(String(desk.id));
 
 						return (
 							<button
@@ -159,7 +122,7 @@ export default function OfficeMapReact({
 	}
 
 	return (
-		<div className="relative min-h-[420px] rounded-[24px] border border-slate-200 bg-gradient-to-br from-slate-100 to-white p-4 sm:min-h-[520px] sm:p-6">
+		<div className="relative min-h-105 rounded-3xl border border-slate-200 bg-linear-to-br from-slate-100 to-white p-4 sm:min-h-130 sm:p-6">
 			<div className="absolute left-4 top-4 rounded-xl border border-slate-200 bg-white px-3 py-2 text-xs text-slate-600 sm:left-6 sm:top-6">
 				Entrada
 			</div>
@@ -171,38 +134,40 @@ export default function OfficeMapReact({
 			<div className="absolute left-1/2 top-6 h-14 w-32 -translate-x-1/2 rounded-2xl border border-slate-200 bg-slate-200/70"></div>
 			<div className="absolute bottom-6 left-6 right-6 h-3 rounded-full bg-slate-200"></div>
 
-			<div className="grid min-h-[360px] grid-cols-2 gap-4 pt-20 sm:grid-cols-3 lg:grid-cols-4">
-				{genericDeskData.map((desk) => (
-					<button
-						key={desk.id}
-						type="button"
-						disabled={!desk.available}
-						onClick={() => {
-							if (!desk.available) return;
-							onSelectDesk(desk.id);
-						}}
-						className={`group relative flex min-h-[92px] cursor-pointer items-center justify-center rounded-3xl border-2 text-sm font-semibold transition duration-200 ${
-							selectedDesk === desk.id
+			<div className="grid min-h-90 grid-cols-2 gap-4 pt-20 sm:grid-cols-3 lg:grid-cols-4">
+				{genericDeskData.map((desk) => {
+					const isAvailable = !occupiedSet.has(String(desk.id));
+
+					return (
+						<button
+							key={desk.id}
+							type="button"
+							disabled={!isAvailable}
+							onClick={() => {
+								if (!isAvailable) return;
+								onSelectDesk(desk.id);
+							}}
+							className={`group relative flex min-h-23 cursor-pointer items-center justify-center rounded-3xl border-2 text-sm font-semibold transition duration-200 ${selectedDesk === desk.id
 								? "border-blue-400 bg-blue-50 text-blue-700 shadow-md shadow-blue-100"
-								: desk.available
+								: isAvailable
 									? "border-emerald-200 bg-emerald-50 text-emerald-700 hover:scale-[1.02] hover:border-emerald-300"
 									: "cursor-not-allowed border-rose-200 bg-rose-50 text-rose-700"
-						}`}
-					>
-						<div className="flex flex-col items-center justify-center gap-2">
-							<span className="text-base">{desk.id}</span>
-							<span
-								className={`rounded-full px-2 py-1 text-[11px] font-medium ${
-									desk.available
+								}`}
+						>
+							<div className="flex flex-col items-center justify-center gap-2">
+								<span className="text-base">{desk.id}</span>
+								<span
+									className={`rounded-full px-2 py-1 text-[11px] font-medium ${isAvailable
 										? "bg-emerald-100 text-emerald-700"
 										: "bg-rose-100 text-rose-700"
-								}`}
-							>
-								{desk.available ? "Disponible" : "Ocupada"}
-							</span>
-						</div>
-					</button>
-				))}
+										}`}
+								>
+									{isAvailable ? "Disponible" : "Ocupada"}
+								</span>
+							</div>
+						</button>
+					);
+				})}
 			</div>
 		</div>
 	);

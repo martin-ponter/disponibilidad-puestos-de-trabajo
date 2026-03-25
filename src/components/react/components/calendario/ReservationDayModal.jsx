@@ -1,6 +1,6 @@
 import React, { useEffect, useMemo, useState } from "react";
 import { officeMaps } from "../../../../data/maps/office-maps.js";
-import OfficeMapReact from "../../OfficeMapReact.jsx";
+import OfficeMapReact from "../ver-mesas/OfficeMapReact.jsx";
 
 const CUSTOM_OFFICE_ROOMS = Object.values(officeMaps).reduce((acc, map) => {
 	if (!acc[map.office]) {
@@ -20,34 +20,34 @@ const OFFICE_ROOMS = {
 
 const OFFICE_DESK_DATA = {
 	Madrid: [
-		{ id: "M1", available: true },
-		{ id: "M2", available: false },
-		{ id: "M3", available: true },
-		{ id: "M4", available: true },
-		{ id: "M5", available: false },
-		{ id: "M6", available: false },
-		{ id: "M7", available: true },
-		{ id: "M8", available: true },
+		{ id: "M1" },
+		{ id: "M2" },
+		{ id: "M3" },
+		{ id: "M4" },
+		{ id: "M5" },
+		{ id: "M6" },
+		{ id: "M7" },
+		{ id: "M8" },
 	],
 	Alcobendas: [
-		{ id: "A1", available: true },
-		{ id: "A2", available: true },
-		{ id: "A3", available: true },
-		{ id: "A4", available: false },
-		{ id: "A5", available: true },
-		{ id: "A6", available: false },
-		{ id: "A7", available: true },
-		{ id: "A8", available: true },
+		{ id: "A1" },
+		{ id: "A2" },
+		{ id: "A3" },
+		{ id: "A4" },
+		{ id: "A5" },
+		{ id: "A6" },
+		{ id: "A7" },
+		{ id: "A8" },
 	],
 	Consuegra: [
-		{ id: "C1", available: false },
-		{ id: "C2", available: true },
-		{ id: "C3", available: true },
-		{ id: "C4", available: true },
-		{ id: "C5", available: false },
-		{ id: "C6", available: true },
-		{ id: "C7", available: true },
-		{ id: "C8", available: false },
+		{ id: "C1" },
+		{ id: "C2" },
+		{ id: "C3" },
+		{ id: "C4" },
+		{ id: "C5" },
+		{ id: "C6" },
+		{ id: "C7" },
+		{ id: "C8" },
 	],
 };
 
@@ -112,6 +112,7 @@ export default function ReservationDayModal({
 	onSaveWork,
 	onSaveAbsence,
 	onDelete,
+	getOccupiedDeskIds,
 }) {
 	const modeFromEntry = inferMode(selectedEntry);
 	const isEdit = Boolean(selectedEntry);
@@ -124,6 +125,8 @@ export default function ReservationDayModal({
 	const [remote, setRemote] = useState(false);
 	const [event, setEvent] = useState(false);
 	const [selectedDesk, setSelectedDesk] = useState(null);
+	const [occupiedDeskIds, setOccupiedDeskIds] = useState([]);
+	const [loadingOccupied, setLoadingOccupied] = useState(false);
 
 	useEffect(() => {
 		if (!isOpen) return;
@@ -137,6 +140,7 @@ export default function ReservationDayModal({
 			setRemote(false);
 			setEvent(false);
 			setSelectedDesk(null);
+			setOccupiedDeskIds([]);
 			return;
 		}
 
@@ -149,6 +153,7 @@ export default function ReservationDayModal({
 			setRemote(false);
 			setEvent(false);
 			setSelectedDesk(null);
+			setOccupiedDeskIds([]);
 			return;
 		}
 
@@ -161,6 +166,77 @@ export default function ReservationDayModal({
 		setEvent(modeFromEntry === "event");
 		setSelectedDesk(modeFromEntry === "office" ? selectedEntry.resource || null : null);
 	}, [isOpen, selectedEntry, modeFromEntry]);
+
+	useEffect(() => {
+		let cancelled = false;
+
+		async function loadOccupiedDesks() {
+			if (
+				!isOpen ||
+				workStatus !== "works" ||
+				remote ||
+				event ||
+				!selectedDate ||
+				!office ||
+				!room ||
+				!startTime ||
+				!endTime ||
+				typeof getOccupiedDeskIds !== "function"
+			) {
+				setOccupiedDeskIds([]);
+				return;
+			}
+
+			try {
+				setLoadingOccupied(true);
+
+				const occupied = await getOccupiedDeskIds({
+					date: selectedDate,
+					office,
+					room,
+					startTime,
+					endTime,
+					excludeEntryId: selectedEntry?.id,
+				});
+
+				if (cancelled) return;
+
+				setOccupiedDeskIds((occupied || []).map(String));
+			} catch (error) {
+				console.error("Error cargando mesas ocupadas:", error);
+				if (cancelled) return;
+				setOccupiedDeskIds([]);
+			} finally {
+				if (!cancelled) {
+					setLoadingOccupied(false);
+				}
+			}
+		}
+
+		loadOccupiedDesks();
+
+		return () => {
+			cancelled = true;
+		};
+	}, [
+		isOpen,
+		workStatus,
+		remote,
+		event,
+		selectedDate,
+		office,
+		room,
+		startTime,
+		endTime,
+		selectedEntry?.id,
+		getOccupiedDeskIds,
+	]);
+
+	useEffect(() => {
+		if (!selectedDesk) return;
+		if (!occupiedDeskIds.includes(String(selectedDesk))) return;
+		setSelectedDesk(null);
+	}, [occupiedDeskIds, selectedDesk]);
 
 	const roomOptions = useMemo(() => {
 		return office ? OFFICE_ROOMS[office] || [] : [];
@@ -177,7 +253,8 @@ export default function ReservationDayModal({
 		room &&
 		startTime &&
 		endTime &&
-		(noDeskNeeded || selectedDesk);
+		(noDeskNeeded || selectedDesk) &&
+		!loadingOccupied;
 
 	if (!isOpen || !selectedDate) return null;
 
@@ -249,11 +326,10 @@ export default function ReservationDayModal({
 						<button
 							type="button"
 							onClick={() => setWorkStatus("works")}
-							className={`rounded-3xl border p-5 text-left shadow-sm transition ${
-								workStatus === "works"
+							className={`rounded-3xl border p-5 text-left shadow-sm transition ${workStatus === "works"
 									? "border-blue-400 bg-blue-50 ring-2 ring-blue-200"
 									: "border-slate-200 bg-white hover:border-blue-300 hover:bg-blue-50"
-							}`}
+								}`}
 						>
 							<div className="mb-4 flex h-12 w-12 items-center justify-center rounded-2xl bg-emerald-50 text-2xl">
 								💼
@@ -267,11 +343,10 @@ export default function ReservationDayModal({
 						<button
 							type="button"
 							onClick={() => setWorkStatus("not-works")}
-							className={`rounded-3xl border p-5 text-left shadow-sm transition ${
-								workStatus === "not-works"
+							className={`rounded-3xl border p-5 text-left shadow-sm transition ${workStatus === "not-works"
 									? "border-blue-400 bg-blue-50 ring-2 ring-blue-200"
 									: "border-slate-200 bg-white hover:border-blue-300 hover:bg-blue-50"
-							}`}
+								}`}
 						>
 							<div className="mb-4 flex h-12 w-12 items-center justify-center rounded-2xl bg-amber-50 text-2xl">
 								🌴
@@ -425,6 +500,11 @@ export default function ReservationDayModal({
 												? `${office} · ${room}`
 												: "Selecciona una oficina y una sala para visualizar el plano."}
 										</p>
+										{loadingOccupied && !noDeskNeeded ? (
+											<p className="mt-1 text-xs text-slate-400">
+												Comprobando ocupación de mesas...
+											</p>
+										) : null}
 									</div>
 
 									{selectedDesk ? (
@@ -460,7 +540,7 @@ export default function ReservationDayModal({
 									<div className="overflow-hidden rounded-[28px] border border-slate-200 bg-slate-50 p-4 sm:p-6">
 										<div className="mb-4 flex flex-wrap items-center justify-between gap-3">
 											<div className="rounded-2xl bg-white px-4 py-2 text-sm text-slate-600 shadow-sm">
-												Plano de ocupaciÃ³n
+												Plano de ocupación
 											</div>
 											<div className="rounded-2xl border border-slate-200 bg-white px-4 py-2 text-sm text-slate-600">
 												Haz clic en una mesa disponible
@@ -473,6 +553,7 @@ export default function ReservationDayModal({
 											genericDeskData={deskOptions}
 											selectedDesk={selectedDesk}
 											onSelectDesk={setSelectedDesk}
+											occupiedDeskIds={occupiedDeskIds}
 										/>
 									</div>
 								)}
@@ -529,7 +610,12 @@ export default function ReservationDayModal({
 								<div className="mt-6 flex justify-end">
 									<button
 										type="button"
-										onClick={() => onSaveAbsence({ date: selectedDate, editingEntry: selectedEntry })}
+										onClick={() =>
+											onSaveAbsence({
+												date: selectedDate,
+												editingEntry: selectedEntry,
+											})
+										}
 										className="inline-flex items-center justify-center rounded-2xl bg-slate-900 px-5 py-3 text-sm font-semibold text-white transition hover:bg-slate-800"
 									>
 										{isEdit ? "Guardar cambios" : "Guardar no trabaja"}
