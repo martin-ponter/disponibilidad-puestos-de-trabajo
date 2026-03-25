@@ -1,3 +1,5 @@
+
+
 import { useEffect, useMemo, useState } from "react";
 import AdminHeader from "../components/admin-reservas/AdminHeader";
 import AdminFilters from "../components/admin-reservas/AdminFilters";
@@ -418,6 +420,67 @@ function buildReservation(item, user, enumMaps) {
     notes: item[FIELD_NOTES] || "",
     title: item.title || "",
   };
+}
+
+function getSeatNotificationMeta(previousReservation, nextReservation) {
+  if (!nextReservation || nextReservation.status !== "office" || !nextReservation.deskId) {
+    return { shouldNotify: false, isReassignment: false };
+  }
+
+  const hadSeatBefore =
+    previousReservation &&
+    previousReservation.status === "office" &&
+    previousReservation.deskId;
+
+  if (!hadSeatBefore) {
+    return { shouldNotify: true, isReassignment: false };
+  }
+
+  const changed =
+    previousReservation.date !== nextReservation.date ||
+    previousReservation.office !== nextReservation.office ||
+    previousReservation.room !== nextReservation.room ||
+    normalizeDeskId(previousReservation.deskId) !== normalizeDeskId(nextReservation.deskId) ||
+    previousReservation.startTime !== nextReservation.startTime ||
+    previousReservation.endTime !== nextReservation.endTime;
+
+  if (!changed) {
+    return { shouldNotify: false, isReassignment: false };
+  }
+
+  return { shouldNotify: true, isReassignment: true };
+}
+
+async function sendSeatSystemNotification({
+  employeeId,
+  isReassignment,
+  date,
+  office,
+  room,
+  deskId,
+  startTime,
+  endTime,
+}) {
+  if (!employeeId) return;
+
+  const title = isReassignment
+    ? "Fuiste reasignado de asiento"
+    : "Fuiste asignado de asiento";
+
+  const message = [
+    title,
+    "",
+    `Fecha: ${formatHumanDate(date)}`,
+    `Horario: ${startTime || "-"} - ${endTime || "-"}`,
+    `Oficina: ${office || "-"}`,
+    `Sala: ${room || "-"}`,
+    `Mesa: ${deskId || "-"}`,
+  ].join("\n");
+
+  await callBitrix("im.notify.system.add", {
+    USER_ID: Number(employeeId),
+    MESSAGE: message,
+  });
 }
 
 export default function AdminReservasPage() {
@@ -870,6 +933,25 @@ export default function AdminReservasPage() {
 
       setSelectedReservationId(refreshedSelected?.id || null);
       setDraft(refreshedSelected ? { ...refreshedSelected } : null);
+
+      const notificationMeta = getSeatNotificationMeta(selectedReservation, refreshedSelected);
+
+      if (notificationMeta.shouldNotify) {
+        try {
+          await sendSeatSystemNotification({
+            employeeId: refreshedSelected.employeeId,
+            isReassignment: notificationMeta.isReassignment,
+            date: refreshedSelected.date,
+            office: refreshedSelected.office,
+            room: refreshedSelected.room,
+            deskId: refreshedSelected.deskId,
+            startTime: refreshedSelected.startTime,
+            endTime: refreshedSelected.endTime,
+          });
+        } catch (notifyErr) {
+          console.error("Error enviando notificación de asiento:", notifyErr);
+        }
+      }
 
       openConfirmation(
         true,
