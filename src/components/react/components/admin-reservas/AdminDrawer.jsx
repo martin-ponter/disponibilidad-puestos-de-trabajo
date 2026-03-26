@@ -51,6 +51,7 @@ export default function AdminDrawer({
   formatHumanDate,
   getLocationText,
   getStatusMeta,
+  occupiedDeskIds = [],
 }) {
   const hasExistingReservation = Boolean(selectedReservation);
   const hasEmptyDeskSelection = Boolean(selectedEmptyDesk);
@@ -94,6 +95,13 @@ export default function AdminDrawer({
   const desks = getDeskDataForOfficeRoom(officeValue, roomValue || rooms[0] || "");
   const showOfficeFields = (draft?.status || "office") !== "not-working";
   const deskDisabled = (draft?.status || "office") !== "office";
+
+  const occupiedDeskIdSet = new Set((occupiedDeskIds || []).map(normalizeDeskId));
+  const normalizedDraftDeskId = normalizeDeskId(draft?.deskId);
+
+  const occupiedDesksInCurrentRoom = desks.filter((desk) =>
+    occupiedDeskIdSet.has(normalizeDeskId(desk.id))
+  );
 
   const currentDateValue =
     selectedReservation?.date || draft?.date || selectedEmptyDesk?.date || "";
@@ -375,17 +383,38 @@ export default function AdminDrawer({
                       className="w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm text-slate-900 outline-none transition disabled:cursor-not-allowed disabled:opacity-60 focus:border-blue-400 focus:ring-2 focus:ring-blue-500/20"
                     >
                       <option value="">Sin seleccionar</option>
-                      {desks.map((desk) => (
-                        <option
-                          key={desk.id}
-                          value={desk.id}
-                          disabled={desk.available === false && desk.id !== draft.deskId}
-                        >
-                          {desk.id}
-                          {desk.available === false ? " · No disponible" : ""}
-                        </option>
-                      ))}
+                      {desks.map((desk) => {
+                        const normalizedDesk = normalizeDeskId(desk.id);
+                        const isOccupied = occupiedDeskIdSet.has(normalizedDesk);
+                        const isCurrentDesk = normalizedDesk === normalizedDraftDeskId;
+                        const isUnavailable = desk.available === false;
+                        const shouldDisable = !isCurrentDesk && (isUnavailable || isOccupied);
+
+                        return (
+                          <option
+                            key={desk.id}
+                            value={desk.id}
+                            disabled={shouldDisable}
+                            className={
+                              isOccupied
+                                ? "text-rose-700"
+                                : isUnavailable
+                                  ? "text-slate-500"
+                                  : ""
+                            }
+                          >
+                            {desk.id}
+                            {isOccupied
+                              ? " · Ocupada"
+                              : isUnavailable
+                                ? " · No disponible"
+                                : ""}
+                          </option>
+                        );
+                      })}
                     </select>
+
+
                   </div>
                 </div>
               )}

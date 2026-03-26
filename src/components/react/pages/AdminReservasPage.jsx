@@ -651,6 +651,55 @@ export default function AdminReservasPage() {
     };
   }, [filters.date, enumMaps, usersById]);
 
+  const occupiedDeskIdsForDraft = useMemo(() => {
+    if (
+      !draft ||
+      draft.status !== "office" ||
+      !draft.date ||
+      !draft.office ||
+      !draft.room ||
+      !draft.startTime ||
+      !draft.endTime
+    ) {
+      return [];
+    }
+
+    return reservations
+      .filter((reservation) => {
+        if (selectedReservationId && reservation.id === Number(selectedReservationId)) {
+          return false;
+        }
+
+        if (reservation.status !== "office") return false;
+        if (reservation.date !== draft.date) return false;
+        if (reservation.office !== draft.office) return false;
+        if (reservation.room !== draft.room) return false;
+        if (!reservation.deskId || !reservation.startTime || !reservation.endTime) {
+          return false;
+        }
+
+        return rangesOverlap(
+          draft.startTime,
+          draft.endTime,
+          reservation.startTime,
+          reservation.endTime
+        );
+      })
+      .map((reservation) => normalizeDeskId(reservation.deskId));
+  }, [reservations, draft, selectedReservationId]);
+
+  useEffect(() => {
+    if (!draft || draft.status !== "office" || !draft.deskId) return;
+
+    const normalizedDraftDeskId = normalizeDeskId(draft.deskId);
+
+    if (!occupiedDeskIdsForDraft.includes(normalizedDraftDeskId)) return;
+
+    setDraft((prev) => (prev ? { ...prev, deskId: null } : prev));
+  }, [occupiedDeskIdsForDraft, draft]);
+
+
+
   useEffect(() => {
     setSelectedReservationId(null);
     setSelectedEmptyDesk(null);
@@ -1238,6 +1287,7 @@ export default function AdminReservasPage() {
               formatHumanDate={formatHumanDate}
               getLocationText={getLocationText}
               getStatusMeta={getStatusMeta}
+              occupiedDeskIds={occupiedDeskIdsForDraft}
             />
           </section>
         </div>

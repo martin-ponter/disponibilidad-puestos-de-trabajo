@@ -67,7 +67,7 @@ export default function AdminEmployeePickerModal({
 			onClick={onClose}
 		>
 			<div
-				className="max-h-[90vh] w-full max-w-4xl overflow-hidden rounded-3xl border border-slate-200 bg-white shadow-2xl"
+				className="max-h-[90vh] w-full max-w-3/4 overflow-hidden rounded-3xl border border-slate-200 bg-white shadow-2xl"
 				onClick={(e) => e.stopPropagation()}
 			>
 				<div className="border-b border-slate-200 px-5 py-4 sm:px-6">
@@ -139,7 +139,7 @@ export default function AdminEmployeePickerModal({
 														className="h-full w-full object-cover"
 													/>
 												) : (
-													<div className="flex h-full w-full items-center justify-center text-lg font-semibold text-slate-500">
+													<div className="flex h-full w-full items-center justify-center text-lg font-semibold text-slate-500 truncate">
 														{fullName.charAt(0).toUpperCase()}
 													</div>
 												)}
@@ -149,7 +149,7 @@ export default function AdminEmployeePickerModal({
 												<h4 className="truncate text-base font-semibold text-slate-900">
 													{fullName}
 												</h4>
-												<p className="mt-1 text-sm text-slate-500">{contact}</p>
+												<p className="mt-1 text-sm text-slate-500 truncate">{contact}</p>
 
 												<div className="mt-3 inline-flex rounded-full border border-blue-200 bg-blue-50 px-3 py-1 text-xs font-semibold text-blue-700">
 													Seleccionar

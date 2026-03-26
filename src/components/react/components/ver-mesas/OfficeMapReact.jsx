@@ -5,16 +5,20 @@ function pct(value, total) {
 	return `${(value / total) * 100}%`;
 }
 
+function normalizeDeskId(value) {
+	return String(value ?? "").trim().toUpperCase();
+}
+
 function getDeskClasses(available, isSelected) {
 	const base =
 		"absolute flex items-center justify-center border text-[10px] sm:text-xs font-semibold transition rounded-2xl";
 
-	if (isSelected) {
-		return `${base} border-blue-500 bg-blue-50 text-blue-700 shadow-md shadow-blue-100`;
+	if (!available) {
+		return `${base} cursor-not-allowed border-rose-200 bg-rose-50 text-rose-700`;
 	}
 
-	if (!available) {
-		return `${base} border-rose-200 bg-rose-50 text-rose-700`;
+	if (isSelected) {
+		return `${base} border-blue-500 bg-blue-50 text-blue-700 shadow-md shadow-blue-100`;
 	}
 
 	return `${base} border-emerald-200 bg-emerald-50 text-emerald-700 hover:border-emerald-300`;
@@ -30,7 +34,8 @@ export default function OfficeMapReact({
 }) {
 	const mapKey = office && room ? `${office}::${room}` : "";
 	const customMap = mapKey ? officeMaps[mapKey] : null;
-	const occupiedSet = new Set((occupiedDeskIds || []).map(String));
+	const normalizedSelectedDesk = normalizeDeskId(selectedDesk);
+	const occupiedSet = new Set((occupiedDeskIds || []).map(normalizeDeskId));
 
 	if (!office || !room) return null;
 
@@ -91,7 +96,10 @@ export default function OfficeMapReact({
 						})}
 
 					{customMap.desks.map((desk) => {
-						const isAvailable = !occupiedSet.has(String(desk.id));
+						const normalizedDeskId = normalizeDeskId(desk.id);
+						const isAvailable = !occupiedSet.has(normalizedDeskId);
+						const isSelected =
+							isAvailable && normalizedSelectedDesk === normalizedDeskId;
 
 						return (
 							<button
@@ -102,7 +110,7 @@ export default function OfficeMapReact({
 									if (!isAvailable) return;
 									onSelectDesk(desk.id);
 								}}
-								className={getDeskClasses(isAvailable, selectedDesk === desk.id)}
+								className={getDeskClasses(isAvailable, isSelected)}
 								style={{
 									left: pct(desk.x, customMap.width),
 									top: pct(desk.y, customMap.height),
@@ -112,6 +120,14 @@ export default function OfficeMapReact({
 							>
 								<div className="flex flex-col items-center justify-center px-1 text-center leading-tight">
 									<span>{desk.id}</span>
+									<span
+										className={`mt-1 rounded-full px-2 py-0.5 text-[9px] font-medium sm:text-[10px] ${isAvailable
+												? "bg-emerald-100 text-emerald-700"
+												: "bg-rose-100 text-rose-700"
+											}`}
+									>
+										{isAvailable ? "Libre" : "Ocupada"}
+									</span>
 								</div>
 							</button>
 						);
@@ -136,7 +152,10 @@ export default function OfficeMapReact({
 
 			<div className="grid min-h-90 grid-cols-2 gap-4 pt-20 sm:grid-cols-3 lg:grid-cols-4">
 				{genericDeskData.map((desk) => {
-					const isAvailable = !occupiedSet.has(String(desk.id));
+					const normalizedDeskId = normalizeDeskId(desk.id);
+					const isAvailable = !occupiedSet.has(normalizedDeskId);
+					const isSelected =
+						isAvailable && normalizedSelectedDesk === normalizedDeskId;
 
 					return (
 						<button
@@ -147,19 +166,19 @@ export default function OfficeMapReact({
 								if (!isAvailable) return;
 								onSelectDesk(desk.id);
 							}}
-							className={`group relative flex min-h-23 cursor-pointer items-center justify-center rounded-3xl border-2 text-sm font-semibold transition duration-200 ${selectedDesk === desk.id
-								? "border-blue-400 bg-blue-50 text-blue-700 shadow-md shadow-blue-100"
-								: isAvailable
-									? "border-emerald-200 bg-emerald-50 text-emerald-700 hover:scale-[1.02] hover:border-emerald-300"
-									: "cursor-not-allowed border-rose-200 bg-rose-50 text-rose-700"
+							className={`group relative flex min-h-23 items-center justify-center rounded-3xl border-2 text-sm font-semibold transition duration-200 ${!isAvailable
+									? "cursor-not-allowed border-rose-200 bg-rose-50 text-rose-700"
+									: isSelected
+										? "border-blue-400 bg-blue-50 text-blue-700 shadow-md shadow-blue-100"
+										: "cursor-pointer border-emerald-200 bg-emerald-50 text-emerald-700 hover:scale-[1.02] hover:border-emerald-300"
 								}`}
 						>
 							<div className="flex flex-col items-center justify-center gap-2">
 								<span className="text-base">{desk.id}</span>
 								<span
 									className={`rounded-full px-2 py-1 text-[11px] font-medium ${isAvailable
-										? "bg-emerald-100 text-emerald-700"
-										: "bg-rose-100 text-rose-700"
+											? "bg-emerald-100 text-emerald-700"
+											: "bg-rose-100 text-rose-700"
 										}`}
 								>
 									{isAvailable ? "Disponible" : "Ocupada"}
