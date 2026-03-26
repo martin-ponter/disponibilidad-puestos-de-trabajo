@@ -1,7 +1,7 @@
 export default function AdminHeader() {
   return (
     <>
-      <div class="flex flex-row-reverse justify-between">
+      <div className="flex flex-row-reverse justify-between">
         <div className="mb-8 flex flex-col items-center gap-5">
           <a
             href="/"

@@ -1,5 +1,3 @@
-
-
 import { useEffect, useMemo, useState } from "react";
 import AdminHeader from "../components/admin-reservas/AdminHeader";
 import AdminFilters from "../components/admin-reservas/AdminFilters";
@@ -7,6 +5,7 @@ import AdminMapView from "../components/admin-reservas/AdminMapView";
 import AdminListView from "../components/admin-reservas/AdminListView";
 import AdminDrawer from "../components/admin-reservas/AdminDrawer";
 import AdminConfirmationModal from "../components/admin-reservas/AdminConfirmationModal";
+import AdminEmployeePickerModal from "../components/admin-reservas/AdminEmployeePickerModal";
 import { officeDeskData, officeRooms } from "../data/adminReservations";
 import { officeMaps } from "../../../data/maps/office-maps";
 
@@ -24,6 +23,9 @@ const FIELD_END = "ufCrm22_1774266267";
 const FIELD_STATUS = "ufCrm22_1774266293";
 const FIELD_NOTES = "ufCrm22_1774266335";
 const FIELD_FULL_DAY = "ufCrm22_1774342876";
+
+const DEFAULT_START_TIME = "09:00";
+const DEFAULT_END_TIME = "18:00";
 
 function formatDate(date) {
   const year = date.getFullYear();
@@ -362,7 +364,7 @@ function getDeskDataForOfficeRoom(office, room) {
   if (customMap?.desks?.length) {
     return customMap.desks.map((desk) => ({
       id: desk.id,
-      available: true,
+      available: desk.available !== false,
     }));
   }
 
@@ -419,6 +421,29 @@ function buildReservation(item, user, enumMaps) {
     bookingMode: normalizedBookingMode,
     notes: item[FIELD_NOTES] || "",
     title: item.title || "",
+  };
+}
+
+function buildDraftFromEmptyDesk(selectedDesk) {
+  return {
+    id: null,
+    raw: null,
+    employeeId: "",
+    employeeName: "",
+    employeeEmail: "",
+    employeePhone: "",
+    employeeAvatar: "",
+    date: selectedDesk?.date || "",
+    office: selectedDesk?.office || null,
+    room: selectedDesk?.room || null,
+    deskId: selectedDesk?.deskId || null,
+    startTime: DEFAULT_START_TIME,
+    endTime: DEFAULT_END_TIME,
+    status: "office",
+    resourceType: "puesto",
+    bookingMode: "individual",
+    notes: "",
+    title: "",
   };
 }
 
@@ -487,6 +512,8 @@ export default function AdminReservasPage() {
   const [reservations, setReservations] = useState([]);
   const [currentTab, setCurrentTab] = useState("map");
   const [selectedReservationId, setSelectedReservationId] = useState(null);
+  const [selectedEmptyDesk, setSelectedEmptyDesk] = useState(null);
+  const [isEmployeePickerOpen, setIsEmployeePickerOpen] = useState(false);
   const [draft, setDraft] = useState(null);
   const [usersById, setUsersById] = useState({});
   const [enumMaps, setEnumMaps] = useState({});
@@ -624,6 +651,13 @@ export default function AdminReservasPage() {
     };
   }, [filters.date, enumMaps, usersById]);
 
+  useEffect(() => {
+    setSelectedReservationId(null);
+    setSelectedEmptyDesk(null);
+    setDraft(null);
+    setIsEmployeePickerOpen(false);
+  }, [filters.date, filters.office, filters.room]);
+
   const availableRooms = useMemo(() => {
     return getOfficeRoomsFromMaps(filters.office);
   }, [filters.office]);
@@ -688,14 +722,16 @@ export default function AdminReservasPage() {
 
   useEffect(() => {
     if (!selectedReservation) {
-      setDraft(null);
+      if (!selectedEmptyDesk) {
+        setDraft(null);
+      }
       return;
     }
 
     setDraft({
       ...selectedReservation,
     });
-  }, [selectedReservation]);
+  }, [selectedReservation, selectedEmptyDesk]);
 
   function openConfirmation(success, title, message) {
     setConfirmation({
@@ -714,8 +750,49 @@ export default function AdminReservasPage() {
     const item = reservations.find((r) => r.id === id);
     if (!item) return;
 
+    setSelectedEmptyDesk(null);
+    setIsEmployeePickerOpen(false);
     setSelectedReservationId(id);
     setDraft({ ...item });
+  }
+
+  function handleSelectEmptyDesk(emptyDesk) {
+    const nextDesk = {
+      office: emptyDesk.office,
+      room: emptyDesk.room,
+      deskId: normalizeDeskId(emptyDesk.deskId),
+      date: emptyDesk.date || filters.date,
+    };
+
+    setSelectedReservationId(null);
+    setSelectedEmptyDesk(nextDesk);
+    setDraft(buildDraftFromEmptyDesk(nextDesk));
+    setIsEmployeePickerOpen(true);
+  }
+
+  function handleOpenEmployeePicker() {
+    if (!selectedEmptyDesk && !draft) return;
+    setIsEmployeePickerOpen(true);
+  }
+
+  function handleSelectEmployee(user) {
+    const { fullName, email, phone, avatar } = getUserDisplayData(user);
+
+    setDraft((prev) => {
+      if (!prev) return prev;
+
+      return {
+        ...prev,
+        employeeId: String(user.ID ?? ""),
+        employeeName: fullName,
+        employeeEmail: email,
+        employeePhone: phone,
+        employeeAvatar: avatar,
+        title: `${fullName} · ${formatHumanDate(prev.date)}`,
+      };
+    });
+
+    setIsEmployeePickerOpen(false);
   }
 
   function handleDraftChange(patch) {
@@ -730,7 +807,7 @@ export default function AdminReservasPage() {
   }
 
   function handleAssignFirstFree() {
-    if (!draft || !selectedReservationId || !draft.office || !draft.room) return;
+    if (!draft || !draft.office || !draft.room) return;
 
     const desks = getDeskDataForOfficeRoom(draft.office, draft.room);
 
@@ -777,9 +854,24 @@ export default function AdminReservasPage() {
   }
 
   async function handleSave() {
-    if (!draft || !selectedReservationId) return;
+    if (!draft) return;
 
+    const isCreating = !selectedReservationId;
     const newStatus = draft.status;
+
+    if (!draft.employeeId) {
+      openConfirmation(
+        false,
+        "Falta la persona",
+        "Debes seleccionar primero a la persona que quieres asignar."
+      );
+      return;
+    }
+
+    if (!draft.date) {
+      openConfirmation(false, "Falta la fecha", "Debes indicar una fecha.");
+      return;
+    }
 
     if (
       (newStatus === "office" || newStatus === "remote" || newStatus === "event") &&
@@ -814,7 +906,7 @@ export default function AdminReservasPage() {
 
     if (newStatus === "office") {
       const conflictingReservation = reservations.find((reservation) => {
-        if (reservation.id === selectedReservationId) return false;
+        if (!isCreating && reservation.id === Number(selectedReservationId)) return false;
         if (reservation.status !== "office") return false;
         if (reservation.date !== draft.date) return false;
         if (reservation.office !== draft.office) return false;
@@ -839,6 +931,31 @@ export default function AdminReservasPage() {
         );
         return;
       }
+    }
+
+    const employeeConflict = reservations.find((reservation) => {
+      if (!draft.employeeId) return false;
+      if (!isCreating && reservation.id === Number(selectedReservationId)) return false;
+      if (String(reservation.employeeId) !== String(draft.employeeId)) return false;
+      if (reservation.date !== draft.date) return false;
+      if (!reservation.startTime || !reservation.endTime) return false;
+      if (!draft.startTime || !draft.endTime) return false;
+
+      return rangesOverlap(
+        draft.startTime,
+        draft.endTime,
+        reservation.startTime,
+        reservation.endTime
+      );
+    });
+
+    if (employeeConflict) {
+      openConfirmation(
+        false,
+        "Empleado ya asignado",
+        `${draft.employeeName} ya tiene una asignación en ese tramo horario.`
+      );
+      return;
     }
 
     try {
@@ -891,10 +1008,7 @@ export default function AdminReservasPage() {
               : "";
 
       const fields = {
-        title:
-          draft.title ||
-          selectedReservation.title ||
-          `${draft.employeeName} · ${formatHumanDate(draft.date)}`,
+        title: draft.title || `${draft.employeeName} · ${formatHumanDate(draft.date)}`,
         [FIELD_EMPLOYEE]: Number(draft.employeeId),
         [FIELD_CENTER]: centerValue,
         [FIELD_ROOM]: roomValue,
@@ -915,11 +1029,18 @@ export default function AdminReservasPage() {
         [FIELD_FULL_DAY]: newStatus === "not-working" ? "Y" : "N",
       };
 
-      await callBitrix("crm.item.update", {
-        entityTypeId: ENTITY_TYPE_ID,
-        id: Number(selectedReservationId),
-        fields,
-      });
+      if (isCreating) {
+        await callBitrix("crm.item.add", {
+          entityTypeId: ENTITY_TYPE_ID,
+          fields,
+        });
+      } else {
+        await callBitrix("crm.item.update", {
+          entityTypeId: ENTITY_TYPE_ID,
+          id: Number(selectedReservationId),
+          fields,
+        });
+      }
 
       const refreshedReservations = await reloadReservationsForDate(
         draft.date,
@@ -928,15 +1049,36 @@ export default function AdminReservasPage() {
         false
       );
 
-      const refreshedSelected =
-        refreshedReservations.find((item) => item.id === Number(selectedReservationId)) || null;
+      let refreshedSelected = null;
 
+      if (isCreating) {
+        refreshedSelected =
+          refreshedReservations.find((item) => {
+            return (
+              String(item.employeeId) === String(draft.employeeId) &&
+              item.date === draft.date &&
+              item.office === draft.office &&
+              item.room === draft.room &&
+              normalizeDeskId(item.deskId) === normalizeDeskId(draft.deskId) &&
+              item.startTime === draft.startTime &&
+              item.endTime === draft.endTime
+            );
+          }) || null;
+      } else {
+        refreshedSelected =
+          refreshedReservations.find((item) => item.id === Number(selectedReservationId)) || null;
+      }
+
+      setSelectedEmptyDesk(null);
       setSelectedReservationId(refreshedSelected?.id || null);
       setDraft(refreshedSelected ? { ...refreshedSelected } : null);
 
-      const notificationMeta = getSeatNotificationMeta(selectedReservation, refreshedSelected);
+      const notificationMeta = getSeatNotificationMeta(
+        isCreating ? null : selectedReservation,
+        refreshedSelected
+      );
 
-      if (notificationMeta.shouldNotify) {
+      if (notificationMeta.shouldNotify && refreshedSelected) {
         try {
           await sendSeatSystemNotification({
             employeeId: refreshedSelected.employeeId,
@@ -955,8 +1097,10 @@ export default function AdminReservasPage() {
 
       openConfirmation(
         true,
-        "Cambios guardados",
-        `La asignación de ${draft.employeeName} se ha actualizado correctamente en Bitrix.`
+        isCreating ? "Asignación creada" : "Cambios guardados",
+        isCreating
+          ? `La nueva asignación de ${draft.employeeName} se ha creado correctamente en Bitrix.`
+          : `La asignación de ${draft.employeeName} se ha actualizado correctamente en Bitrix.`
       );
     } catch (err) {
       console.error("Error guardando cambios en Bitrix:", err);
@@ -1061,9 +1205,11 @@ export default function AdminReservasPage() {
                   reservations={mapRoomReservations}
                   highlightedReservationIds={highlightedReservationIds}
                   selectedReservationId={selectedReservationId}
+                  selectedEmptyDesk={selectedEmptyDesk}
                   onSelectReservation={handleSelectReservation}
+                  onSelectEmptyDesk={handleSelectEmptyDesk}
                   onAssignFirstFree={handleAssignFirstFree}
-                  canAssignFirstFree={Boolean(selectedReservationId)}
+                  canAssignFirstFree={Boolean(selectedReservationId || selectedEmptyDesk)}
                   formatHumanDate={formatHumanDate}
                   isLoading={dataLoading}
                 />
@@ -1082,10 +1228,12 @@ export default function AdminReservasPage() {
 
             <AdminDrawer
               selectedReservation={selectedReservation}
+              selectedEmptyDesk={selectedEmptyDesk}
               draft={draft}
               onDraftChange={handleDraftChange}
               onClearDesk={handleClearDesk}
               onSave={handleSave}
+              onOpenEmployeePicker={handleOpenEmployeePicker}
               isSaving={isSaving}
               formatHumanDate={formatHumanDate}
               getLocationText={getLocationText}
@@ -1094,6 +1242,22 @@ export default function AdminReservasPage() {
           </section>
         </div>
       </section>
+
+      <AdminEmployeePickerModal
+        isOpen={isEmployeePickerOpen}
+        usersById={usersById}
+        selectedDesk={
+          draft
+            ? {
+              office: draft.office,
+              room: draft.room,
+              deskId: draft.deskId,
+            }
+            : selectedEmptyDesk
+        }
+        onClose={() => setIsEmployeePickerOpen(false)}
+        onSelectUser={handleSelectEmployee}
+      />
 
       <AdminConfirmationModal
         isOpen={confirmation.isOpen}

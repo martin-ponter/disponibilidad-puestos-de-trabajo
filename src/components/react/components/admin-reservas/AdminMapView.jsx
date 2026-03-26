@@ -45,17 +45,14 @@ function getDeskCardClasses(availability, isSelected, isHighlighted) {
   }
 
   if (isHighlighted) {
-    return `${base} border-blue-200 bg-blue-200 text-blue-700 cursor-pointer hover:border-blue-300 ${isSelected ? "ring-2 ring-slate-400" : ""
-      }`;
+    return `${base} border-blue-200 bg-blue-200 text-blue-700 cursor-pointer hover:border-blue-300 ${isSelected ? "ring-2 ring-slate-400" : ""}`;
   }
 
   if (availability === "occupied") {
-    return `${base} border-rose-200 bg-rose-50 text-rose-700 cursor-pointer hover:border-rose-300 ${isSelected ? "ring-2 ring-slate-400" : ""
-      }`;
+    return `${base} border-rose-200 bg-rose-50 text-rose-700 cursor-pointer hover:border-rose-300 ${isSelected ? "ring-2 ring-slate-400" : ""}`;
   }
 
-  return `${base} cursor-default border-emerald-200 bg-emerald-50 text-emerald-700 ${isSelected ? "ring-2 ring-slate-400" : ""
-    }`;
+  return `${base} cursor-pointer border-emerald-200 bg-emerald-50 text-emerald-700 hover:border-emerald-300 ${isSelected ? "ring-2 ring-slate-400" : ""}`;
 }
 
 function getGenericDeskClasses(availability, isSelected, isHighlighted) {
@@ -67,17 +64,14 @@ function getGenericDeskClasses(availability, isSelected, isHighlighted) {
   }
 
   if (isHighlighted) {
-    return `${base} cursor-pointer border-blue-200 bg-blue-50 text-blue-700 hover:scale-[1.02] hover:border-blue-300 ${isSelected ? "ring-2 ring-slate-400" : ""
-      }`;
+    return `${base} cursor-pointer border-blue-200 bg-blue-50 text-blue-700 hover:scale-[1.02] hover:border-blue-300 ${isSelected ? "ring-2 ring-slate-400" : ""}`;
   }
 
   if (availability === "occupied") {
-    return `${base} cursor-pointer border-rose-200 bg-rose-50 text-rose-700 hover:scale-[1.02] hover:border-rose-300 ${isSelected ? "ring-2 ring-slate-400" : ""
-      }`;
+    return `${base} cursor-pointer border-rose-200 bg-rose-50 text-rose-700 hover:scale-[1.02] hover:border-rose-300 ${isSelected ? "ring-2 ring-slate-400" : ""}`;
   }
 
-  return `${base} cursor-default border-emerald-200 bg-emerald-50 text-emerald-700 ${isSelected ? "ring-2 ring-slate-400" : ""
-    }`;
+  return `${base} cursor-pointer border-emerald-200 bg-emerald-50 text-emerald-700 hover:scale-[1.02] hover:border-emerald-300 ${isSelected ? "ring-2 ring-slate-400" : ""}`;
 }
 
 export default function AdminMapView({
@@ -87,9 +81,9 @@ export default function AdminMapView({
   reservations,
   highlightedReservationIds = [],
   selectedReservationId,
+  selectedEmptyDesk,
   onSelectReservation,
-  onAssignFirstFree,
-  canAssignFirstFree,
+  onSelectEmptyDesk,
   formatHumanDate,
   isLoading = false,
 }) {
@@ -140,6 +134,16 @@ export default function AdminMapView({
 
   const genericDesks = officeDeskData[office] || [];
 
+  function isSelectedEmptyDeskById(deskId) {
+    if (!selectedEmptyDesk) return false;
+
+    return (
+      selectedEmptyDesk.office === office &&
+      selectedEmptyDesk.room === room &&
+      normalizeDeskId(selectedEmptyDesk.deskId) === normalizeDeskId(deskId)
+    );
+  }
+
   function handleDeskMouseEnter(deskId, event) {
     const normalizedDeskId = normalizeDeskId(deskId);
     if (!reservationByDeskId[normalizedDeskId]) return;
@@ -161,6 +165,22 @@ export default function AdminMapView({
       setHoveredDeskId("");
       setHoverCard(null);
     }
+  }
+
+  function handleDeskClick({ availability, reservation, deskId }) {
+    if (availability === "blocked") return;
+
+    if (reservation) {
+      onSelectReservation?.(reservation.id);
+      return;
+    }
+
+    onSelectEmptyDesk?.({
+      office,
+      room,
+      deskId: normalizeDeskId(deskId),
+      date,
+    });
   }
 
   if (shouldShowEmpty) {
@@ -248,7 +268,7 @@ export default function AdminMapView({
       </div>
 
       <div className="overflow-visible rounded-[28px] border border-slate-200 bg-slate-50 p-5 sm:p-7">
-        <div className="relative flex min-h-[460px] items-center justify-center rounded-[24px] border border-slate-200 bg-gradient-to-br from-slate-100 to-white p-5 sm:min-h-[620px] sm:p-8 overflow-visible">
+        <div className="relative flex min-h-[460px] items-center justify-center rounded-[24px] border border-slate-200 bg-gradient-to-br from-slate-100 to-white p-5 overflow-visible sm:min-h-[620px] sm:p-8">
           {customMap ? (
             <div className="mx-auto flex w-full justify-center px-2 sm:px-4">
               <div
@@ -272,7 +292,7 @@ export default function AdminMapView({
                       return (
                         <div
                           key={feature.id}
-                          className="absolute flex items-center justify-center text-[9px] sm:text-[11px] font-semibold tracking-wide text-slate-500"
+                          className="absolute flex items-center justify-center text-[9px] font-semibold tracking-wide text-slate-500 sm:text-[11px]"
                           style={style}
                         >
                           {feature.text}
@@ -284,8 +304,7 @@ export default function AdminMapView({
                       return (
                         <div
                           key={feature.id}
-                          className={`absolute border border-slate-300 bg-transparent ${feature.rounded ? "rounded-[24px]" : ""
-                            }`}
+                          className={`absolute border border-slate-300 bg-transparent ${feature.rounded ? "rounded-[24px]" : ""}`}
                           style={style}
                         />
                       );
@@ -307,13 +326,16 @@ export default function AdminMapView({
                 {customMap.desks.map((desk) => {
                   const normalizedDesk = normalizeDeskId(desk.id);
                   const reservation = reservationByDeskId[normalizedDesk];
-                  const isSelected = reservation?.id === selectedReservationId;
                   const isHighlighted = reservation
                     ? highlightedReservationIdSet.has(Number(reservation.id))
                     : false;
+                  const isSelected =
+                    (reservation && reservation.id === selectedReservationId) ||
+                    (!reservation && isSelectedEmptyDeskById(desk.id));
 
                   let availability = "free";
-                  if (reservation) availability = "occupied";
+                  if (desk.available === false) availability = "blocked";
+                  else if (reservation) availability = "occupied";
 
                   return (
                     <div
@@ -321,18 +343,24 @@ export default function AdminMapView({
                       onMouseEnter={(e) => handleDeskMouseEnter(desk.id, e)}
                       onMouseMove={(e) => handleDeskMouseMove(desk.id, e)}
                       onMouseLeave={() => handleDeskMouseLeave(desk.id)}
-                      className={`${getDeskCardClasses(
+                      className={getDeskCardClasses(
                         availability,
                         Boolean(isSelected),
                         isHighlighted
-                      )} ${availability === "occupied" ? "cursor-pointer" : "cursor-default"}`}
+                      )}
                       style={{
                         left: pct(desk.x, customMap.width),
                         top: pct(desk.y, customMap.height),
                         width: pct(desk.w, customMap.width),
                         height: pct(desk.h, customMap.height),
                       }}
-                      onClick={() => reservation && onSelectReservation(reservation.id)}
+                      onClick={() =>
+                        handleDeskClick({
+                          availability,
+                          reservation,
+                          deskId: desk.id,
+                        })
+                      }
                     >
                       <div className="flex flex-col items-center justify-center px-1 text-center leading-tight">
                         <span>{desk.id}</span>
@@ -343,7 +371,7 @@ export default function AdminMapView({
               </div>
             </div>
           ) : (
-            <div className="relative w-full rounded-[24px] border border-slate-200 bg-gradient-to-br from-slate-100 to-white p-5 sm:min-h-[620px] sm:p-8 overflow-visible">
+            <div className="relative w-full overflow-visible rounded-[24px] border border-slate-200 bg-gradient-to-br from-slate-100 to-white p-5 sm:min-h-[620px] sm:p-8">
               <div className="absolute left-4 top-4 rounded-xl border border-slate-200 bg-white px-3 py-2 text-xs text-slate-600 sm:left-6 sm:top-6">
                 Entrada
               </div>
@@ -359,10 +387,12 @@ export default function AdminMapView({
                 {genericDesks.map((desk) => {
                   const normalizedDesk = normalizeDeskId(desk.id);
                   const reservation = reservationByDeskId[normalizedDesk];
-                  const isSelected = reservation?.id === selectedReservationId;
                   const isHighlighted = reservation
                     ? highlightedReservationIdSet.has(Number(reservation.id))
                     : false;
+                  const isSelected =
+                    (reservation && reservation.id === selectedReservationId) ||
+                    (!reservation && isSelectedEmptyDeskById(desk.id));
 
                   let availability = "free";
                   if (desk.available === false) availability = "blocked";
@@ -374,12 +404,18 @@ export default function AdminMapView({
                       onMouseEnter={(e) => handleDeskMouseEnter(desk.id, e)}
                       onMouseMove={(e) => handleDeskMouseMove(desk.id, e)}
                       onMouseLeave={() => handleDeskMouseLeave(desk.id)}
-                      onClick={() => reservation && onSelectReservation(reservation.id)}
-                      className={`${getGenericDeskClasses(
+                      onClick={() =>
+                        handleDeskClick({
+                          availability,
+                          reservation,
+                          deskId: desk.id,
+                        })
+                      }
+                      className={getGenericDeskClasses(
                         availability,
                         Boolean(isSelected),
                         isHighlighted
-                      )} ${availability === "occupied" ? "cursor-pointer" : "cursor-default"}`}
+                      )}
                     >
                       <span className="text-base">{desk.id}</span>
 
@@ -397,10 +433,7 @@ export default function AdminMapView({
 
                       {availability === "occupied" && (
                         <span
-                          className={`mt-2 rounded-full px-2 py-1 text-[11px] font-medium ${isHighlighted
-                            ? "bg-blue-100 text-blue-700"
-                            : "bg-rose-100 text-rose-700"
-                            }`}
+                          className={`mt-2 rounded-full px-2 py-1 text-[11px] font-medium ${isHighlighted ? "bg-blue-100 text-blue-700" : "bg-rose-100 text-rose-700"}`}
                         >
                           {isHighlighted ? "Coincide" : "Ocupada"}
                         </span>
@@ -422,7 +455,7 @@ export default function AdminMapView({
 
           {hoveredReservation && hoverCard ? (
             <div
-              className="fixed z-50 w-[340px] pointer-events-none"
+              className="pointer-events-none fixed z-50 w-[340px]"
               style={{
                 left: `${hoverCard.left}px`,
                 top: `${hoverCard.top}px`,
