@@ -1,0 +1,8 @@
+{
+  "rewrites": [
+    {
+      "source": "/bitrix-entry",
+      "destination": "/api/bitrix-entry"
+    }
+  ]
+}
