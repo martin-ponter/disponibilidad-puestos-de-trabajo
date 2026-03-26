@@ -17,7 +17,7 @@
 // 				{
 // 					USER_ID: currentUserId,
 // 					MESSAGE:
-// 						"Prueba de notificación del sistema.\n\nSi estás viendo esto, las notificaciones de Bitrix están funcionando correctamente.",
+// 						"Prueba de notificación del sistema.\n\nSi estás viendo esto, las notificaciones de Bitrix están funcionando correctamente. Martin",
 // 				},
 // 				(notifyResult) => {
 // 					if (notifyResult.error()) {
