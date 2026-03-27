@@ -7,16 +7,14 @@ const CUSTOM_OFFICE_ROOMS = Object.values(officeMaps).reduce((acc, map) => {
 		acc[map.office] = [];
 	}
 
-	acc[map.office].push(map.room);
+	if (!acc[map.office].includes(map.room)) {
+		acc[map.office].push(map.room);
+	}
+
 	return acc;
 }, {});
 
-const OFFICE_ROOMS = {
-	...CUSTOM_OFFICE_ROOMS,
-	Madrid: ["Sala A", "Sala B", "Sala Dirección", "Sala Colaborativa"],
-	Alcobendas: ["Sala Atlas", "Sala Nexo", "Sala Focus"],
-	Consuegra: ["Sala Central", "Sala Archivo", "Sala Clientes"],
-};
+const OFFICE_ROOMS = CUSTOM_OFFICE_ROOMS;
 
 const OFFICE_DESK_DATA = {
 	Madrid: [

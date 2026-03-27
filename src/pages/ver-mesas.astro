@@ -5,14 +5,17 @@ import ViewDesksReact from "../components/react/components/ver-mesas/VerMesas";
 
 import { officeMaps } from "../data/maps/office-maps";
 
-const officeRooms = {
-  Toledo: Object.values(officeMaps)
-    .filter((map) => map.office === "Toledo")
-    .map((map) => map.room),
-  Madrid: ["Sala A", "Sala B", "Sala Dirección", "Sala Colaborativa"],
-  Alcobendas: ["Sala Atlas", "Sala Nexo", "Sala Focus"],
-  Consuegra: ["Sala Central", "Sala Archivo", "Sala Clientes"],
-};
+const officeRooms = Object.values(officeMaps).reduce((acc, map) => {
+  if (!acc[map.office]) {
+    acc[map.office] = [];
+  }
+
+  if (!acc[map.office].includes(map.room)) {
+    acc[map.office].push(map.room);
+  }
+
+  return acc;
+}, {});
 
 const genericOfficeDeskData = {
   Madrid: [

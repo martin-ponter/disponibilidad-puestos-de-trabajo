@@ -1,9 +1,16 @@
-export const officeRooms = {
-  Toledo: ["Sala Principal", "Sala Norte", "Sala Reuniones", "Open Space"],
-  Madrid: ["Sala A", "Sala B", "Sala Dirección", "Sala Colaborativa"],
-  Alcobendas: ["Sala Atlas", "Sala Nexo", "Sala Focus"],
-  Consuegra: ["Sala Central", "Sala Archivo", "Sala Clientes"],
-};
+import { officeMaps } from "../../../data/maps/office-maps";
+
+export const officeRooms = Object.values(officeMaps).reduce((acc, map) => {
+  if (!acc[map.office]) {
+    acc[map.office] = [];
+  }
+
+  if (!acc[map.office].includes(map.room)) {
+    acc[map.office].push(map.room);
+  }
+
+  return acc;
+}, {});
 
 export const officeDeskData = {
   Toledo: [
@@ -92,7 +99,7 @@ export const initialReservations = [
     date: "2026-03-30",
     status: "remote",
     office: "Madrid",
-    room: "Sala A",
+    room: "Sala Vistas Plaza de las Cortes",
     deskId: null,
     startTime: "08:00",
     endTime: "15:00",
@@ -108,7 +115,7 @@ export const initialReservations = [
     date: "2026-03-30",
     status: "event",
     office: "Madrid",
-    room: "Sala Dirección",
+    room: "Despacho Luis",
     deskId: null,
     startTime: "10:00",
     endTime: "13:00",
@@ -140,8 +147,8 @@ export const initialReservations = [
     date: "2026-03-30",
     status: "office",
     office: "Madrid",
-    room: "Sala A",
-    deskId: "M1",
+    room: "Sala Vistas Plaza de las Cortes",
+    deskId: "MAD-01",
     startTime: "09:00",
     endTime: "14:00",
   },
