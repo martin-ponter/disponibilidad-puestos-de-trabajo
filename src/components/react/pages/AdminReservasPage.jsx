@@ -88,6 +88,34 @@ function rangesOverlap(startA, endA, startB, endB) {
   return toMinutes(startA) < toMinutes(endB) && toMinutes(endA) > toMinutes(startB);
 }
 
+function getCurrentTimeHHMM(date = new Date()) {
+  const hours = String(date.getHours()).padStart(2, "0");
+  const minutes = String(date.getMinutes()).padStart(2, "0");
+  return `${hours}:${minutes}`;
+}
+
+function isTodayDateString(dateString, now = new Date()) {
+  return dateString === formatDate(now);
+}
+
+function isReservationVisibleAtCurrentTime(reservation, now = new Date()) {
+  if (!reservation) return false;
+
+  if (!isTodayDateString(reservation.date, now)) {
+    return true;
+  }
+
+  if (!reservation.startTime || !reservation.endTime) {
+    return true;
+  }
+
+  const nowMinutes = toMinutes(getCurrentTimeHHMM(now));
+  const startMinutes = toMinutes(reservation.startTime);
+  const endMinutes = toMinutes(reservation.endTime);
+
+  return nowMinutes >= startMinutes && nowMinutes < endMinutes;
+}
+
 function toBitrixDateTime(dateString, timeString) {
   const [year, month, day] = dateString.split("-").map(Number);
   const [hours, minutes] = timeString.split(":").map(Number);
@@ -521,6 +549,7 @@ export default function AdminReservasPage() {
   const [dataLoading, setDataLoading] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
   const [error, setError] = useState("");
+  const [nowReference, setNowReference] = useState(() => new Date());
 
   const [filters, setFilters] = useState({
     date: formatDate(new Date()),
@@ -536,6 +565,16 @@ export default function AdminReservasPage() {
     title: "",
     message: "",
   });
+
+  useEffect(() => {
+    const intervalId = window.setInterval(() => {
+      setNowReference(new Date());
+    }, 60000);
+
+    return () => {
+      window.clearInterval(intervalId);
+    };
+  }, []);
 
   useEffect(() => {
     if (!window.BX24) {
@@ -651,6 +690,12 @@ export default function AdminReservasPage() {
     };
   }, [filters.date, enumMaps, usersById]);
 
+  const visibleReservations = useMemo(() => {
+    return reservations.filter((reservation) =>
+      isReservationVisibleAtCurrentTime(reservation, nowReference)
+    );
+  }, [reservations, nowReference]);
+
   const occupiedDeskIdsForDraft = useMemo(() => {
     if (
       !draft ||
@@ -698,8 +743,6 @@ export default function AdminReservasPage() {
     setDraft((prev) => (prev ? { ...prev, deskId: null } : prev));
   }, [occupiedDeskIdsForDraft, draft]);
 
-
-
   useEffect(() => {
     setSelectedReservationId(null);
     setSelectedEmptyDesk(null);
@@ -712,7 +755,7 @@ export default function AdminReservasPage() {
   }, [filters.office]);
 
   const filteredReservations = useMemo(() => {
-    return reservations.filter((item) => {
+    return visibleReservations.filter((item) => {
       const matchesDate = !filters.date || item.date === filters.date;
       const matchesOffice = filters.office === "all" || item.office === filters.office;
       const matchesRoom = filters.room === "all" || item.room === filters.room;
@@ -737,18 +780,18 @@ export default function AdminReservasPage() {
 
       return matchesDate && matchesOffice && matchesRoom && matchesStatus && matchesSearch;
     });
-  }, [reservations, filters]);
+  }, [visibleReservations, filters]);
 
   const mapRoomReservations = useMemo(() => {
     if (filters.office === "all" || filters.room === "all") return [];
-    return reservations.filter(
+    return visibleReservations.filter(
       (item) =>
         item.date === filters.date &&
         item.office === filters.office &&
         item.room === filters.room &&
         item.status === "office"
     );
-  }, [reservations, filters.date, filters.office, filters.room]);
+  }, [visibleReservations, filters.date, filters.office, filters.room]);
 
   const highlightedReservationIds = useMemo(() => {
     const query = filters.search.trim().toLowerCase();
@@ -766,8 +809,8 @@ export default function AdminReservasPage() {
 
   const selectedReservation = useMemo(() => {
     if (!selectedReservationId) return null;
-    return reservations.find((item) => item.id === selectedReservationId) || null;
-  }, [reservations, selectedReservationId]);
+    return visibleReservations.find((item) => item.id === selectedReservationId) || null;
+  }, [visibleReservations, selectedReservationId]);
 
   useEffect(() => {
     if (!selectedReservation) {
@@ -796,7 +839,7 @@ export default function AdminReservasPage() {
   }
 
   function handleSelectReservation(id) {
-    const item = reservations.find((r) => r.id === id);
+    const item = visibleReservations.find((r) => r.id === id);
     if (!item) return;
 
     setSelectedEmptyDesk(null);
@@ -1119,8 +1162,14 @@ export default function AdminReservasPage() {
       }
 
       setSelectedEmptyDesk(null);
-      setSelectedReservationId(refreshedSelected?.id || null);
-      setDraft(refreshedSelected ? { ...refreshedSelected } : null);
+
+      if (refreshedSelected && isReservationVisibleAtCurrentTime(refreshedSelected, new Date())) {
+        setSelectedReservationId(refreshedSelected.id || null);
+        setDraft({ ...refreshedSelected });
+      } else {
+        setSelectedReservationId(null);
+        setDraft(null);
+      }
 
       const notificationMeta = getSeatNotificationMeta(
         isCreating ? null : selectedReservation,
