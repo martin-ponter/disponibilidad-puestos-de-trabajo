@@ -25,7 +25,7 @@ const COMEDOR_MAPS = {
 				{ id: "TOL-CMDR-07", x: 700, y: 320 },
 				{ id: "TOL-CMDR-08", x: 700, y: 405 },
 
-				{ id: "TOL-CMDR-09", x: 510, y: 530 },
+				{ id: "TOL-CMDR-09", x: 530, y: 530 },
 			],
 		},
 	],
