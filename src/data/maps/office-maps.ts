@@ -708,7 +708,7 @@ export const officeMaps: Record<string, OfficeMapDefinition> = {
     office: "Madrid",
     room: "Sala Fiscal",
     width: 1000,
-    height: 1180,
+    height: 1280,
     features: [
       {
         type: "label",
