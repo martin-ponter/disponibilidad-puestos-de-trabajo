@@ -174,14 +174,6 @@ export default function OfficeMapReact({
 						>
 							<div className="flex flex-col items-center justify-center gap-2">
 								<span className="text-base">{desk.id}</span>
-								<span
-									className={`rounded-full px-2 py-1 text-[11px] font-medium ${isAvailable
-										? "bg-emerald-100 text-emerald-700"
-										: "bg-rose-100 text-rose-700"
-										}`}
-								>
-									{isAvailable ? "Disponible" : "Ocupada"}
-								</span>
 							</div>
 						</button>
 					);
