@@ -9,23 +9,23 @@ const COMEDOR_MAPS = {
 		tables: [
 			{
 				id: "table-toledo-main",
-				x: 430,
-				y: 140,
-				w: 180,
-				h: 280,
+				x: 450,
+				y: 135,
+				w: 120,
+				h: 290,
 				label: "Mesa central",
 				seats: [
-					{ id: "TOL-CMDR-01", x: 375, y: 175 },
-					{ id: "TOL-CMDR-02", x: 375, y: 240 },
-					{ id: "TOL-CMDR-03", x: 375, y: 305 },
-					{ id: "TOL-CMDR-04", x: 375, y: 370 },
+					{ id: "TOL-CMDR-01", x: 340, y: 175 },
+					{ id: "TOL-CMDR-02", x: 340, y: 245 },
+					{ id: "TOL-CMDR-03", x: 340, y: 315 },
+					{ id: "TOL-CMDR-04", x: 340, y: 385 },
 
-					{ id: "TOL-CMDR-05", x: 665, y: 175 },
-					{ id: "TOL-CMDR-06", x: 665, y: 240 },
-					{ id: "TOL-CMDR-07", x: 665, y: 305 },
-					{ id: "TOL-CMDR-08", x: 665, y: 370 },
+					{ id: "TOL-CMDR-05", x: 680, y: 175 },
+					{ id: "TOL-CMDR-06", x: 680, y: 245 },
+					{ id: "TOL-CMDR-07", x: 680, y: 315 },
+					{ id: "TOL-CMDR-08", x: 680, y: 385 },
 
-					{ id: "TOL-CMDR-09", x: 520, y: 500 },
+					{ id: "TOL-CMDR-09", x: 510, y: 510 },
 				],
 			},
 		],
@@ -229,7 +229,7 @@ function getSeatLabelOffset(seatId, office) {
 			return {
 				left: "50%",
 				top: "100%",
-				transform: "translate(-50%, 10px)",
+				transform: "translate(-50%, 12px)",
 			};
 		}
 
@@ -239,14 +239,14 @@ function getSeatLabelOffset(seatId, office) {
 			return {
 				right: "100%",
 				top: "50%",
-				transform: "translate(-10px, -50%)",
+				transform: "translate(-18px, -50%)",
 			};
 		}
 
 		return {
 			left: "100%",
 			top: "50%",
-			transform: "translate(10px, -50%)",
+			transform: "translate(18px, -50%)",
 		};
 	}
 
@@ -352,10 +352,10 @@ export default function ComedorMapReact({
 									key={seat.id}
 									className="absolute"
 									style={{
-										left: `calc(${pct(seat.x, map.width)} - 26px)`,
-										top: `calc(${pct(seat.y, map.height)} - 26px)`,
-										width: "52px",
-										height: "52px",
+										left: `calc(${pct(seat.x, map.width)} - 28px)`,
+										top: `calc(${pct(seat.y, map.height)} - 28px)`,
+										width: "56px",
+										height: "56px",
 										overflow: "visible",
 									}}
 								>
@@ -368,8 +368,8 @@ export default function ComedorMapReact({
 										}}
 										className={getSeatClasses(isOccupied, isSelected)}
 										style={{
-											width: "52px",
-											height: "52px",
+											width: "56px",
+											height: "56px",
 										}}
 										title={seat.id}
 									>
