@@ -10,20 +10,20 @@ const COMEDOR_MAPS = {
 			{
 				id: "table-toledo-main",
 				x: 430,
-				y: 150,
+				y: 140,
 				w: 180,
-				h: 300,
+				h: 280,
 				label: "Mesa central",
 				seats: [
-					{ id: "TOL-CMDR-01", x: 380, y: 190 },
-					{ id: "TOL-CMDR-02", x: 380, y: 250 },
-					{ id: "TOL-CMDR-03", x: 380, y: 310 },
-					{ id: "TOL-CMDR-04", x: 380, y: 370 },
+					{ id: "TOL-CMDR-01", x: 375, y: 175 },
+					{ id: "TOL-CMDR-02", x: 375, y: 240 },
+					{ id: "TOL-CMDR-03", x: 375, y: 305 },
+					{ id: "TOL-CMDR-04", x: 375, y: 370 },
 
-					{ id: "TOL-CMDR-05", x: 660, y: 190 },
-					{ id: "TOL-CMDR-06", x: 660, y: 250 },
-					{ id: "TOL-CMDR-07", x: 660, y: 310 },
-					{ id: "TOL-CMDR-08", x: 660, y: 370 },
+					{ id: "TOL-CMDR-05", x: 665, y: 175 },
+					{ id: "TOL-CMDR-06", x: 665, y: 240 },
+					{ id: "TOL-CMDR-07", x: 665, y: 305 },
+					{ id: "TOL-CMDR-08", x: 665, y: 370 },
 
 					{ id: "TOL-CMDR-09", x: 520, y: 500 },
 				],
@@ -34,6 +34,7 @@ const COMEDOR_MAPS = {
 		name: "Comedor Madrid",
 		width: 1000,
 		height: 620,
+		hasWindows: true,
 		tables: [
 			{
 				id: "table-1",
@@ -97,6 +98,7 @@ const COMEDOR_MAPS = {
 		name: "Comedor Alcobendas",
 		width: 1000,
 		height: 620,
+		hasWindows: true,
 		tables: [
 			{
 				id: "table-1",
@@ -160,6 +162,7 @@ const COMEDOR_MAPS = {
 		name: "Comedor Consuegra",
 		width: 1000,
 		height: 620,
+		hasWindows: true,
 		tables: [
 			{
 				id: "table-1",
@@ -207,7 +210,7 @@ function pct(value, total) {
 
 function getSeatClasses(isOccupied, isSelected) {
 	const base =
-		"absolute flex items-center justify-center rounded-full border text-[11px] font-semibold transition";
+		"absolute flex items-center justify-center rounded-full border text-[9px] font-semibold transition";
 
 	if (isSelected) {
 		return `${base} border-blue-500 bg-blue-50 text-blue-700 shadow-md shadow-blue-100`;
@@ -218,6 +221,40 @@ function getSeatClasses(isOccupied, isSelected) {
 	}
 
 	return `${base} border-emerald-200 bg-emerald-50 text-emerald-700 hover:scale-105 hover:border-emerald-300`;
+}
+
+function getSeatLabelOffset(seatId, office) {
+	if (office === "Toledo") {
+		if (seatId === "TOL-CMDR-09") {
+			return {
+				left: "50%",
+				top: "100%",
+				transform: "translate(-50%, 10px)",
+			};
+		}
+
+		const num = Number(seatId.split("-").pop());
+
+		if (num >= 1 && num <= 4) {
+			return {
+				right: "100%",
+				top: "50%",
+				transform: "translate(-10px, -50%)",
+			};
+		}
+
+		return {
+			left: "100%",
+			top: "50%",
+			transform: "translate(10px, -50%)",
+		};
+	}
+
+	return {
+		left: "50%",
+		top: "100%",
+		transform: "translate(-50%, 8px)",
+	};
 }
 
 export default function ComedorMapReact({
@@ -268,10 +305,14 @@ export default function ComedorMapReact({
 					Plano provisional
 				</div>
 
-				<div className="absolute left-[2%] top-[15%] h-[68%] w-[2px] bg-slate-300" />
-				<div className="absolute left-[1%] top-[50%] -translate-y-1/2 -rotate-90 text-[10px] font-semibold tracking-wide text-slate-400">
-					VENTANA
-				</div>
+				{map.hasWindows !== false ? (
+					<>
+						<div className="absolute left-[2%] top-[15%] h-[68%] w-[2px] bg-slate-300" />
+						<div className="absolute left-[1%] top-[50%] -translate-y-1/2 -rotate-90 text-[10px] font-semibold tracking-wide text-slate-400">
+							VENTANA
+						</div>
+					</>
+				) : null}
 
 				<div className="absolute bottom-[4%] right-[6%] rounded-2xl bg-white/90 px-4 py-2 text-xs font-semibold text-slate-500 shadow-sm">
 					ENTRADA
@@ -304,27 +345,44 @@ export default function ComedorMapReact({
 						{table.seats.map((seat) => {
 							const isOccupied = occupiedSet.has(String(seat.id));
 							const isSelected = selectedSeat === seat.id;
+							const labelPosition = getSeatLabelOffset(seat.id, office);
 
 							return (
-								<button
+								<div
 									key={seat.id}
-									type="button"
-									disabled={isOccupied}
-									onClick={() => {
-										if (isOccupied) return;
-										onSelectSeat?.(seat.id);
-									}}
-									className={getSeatClasses(isOccupied, isSelected)}
+									className="absolute"
 									style={{
-										left: `calc(${pct(seat.x, map.width)} - 24px)`,
-										top: `calc(${pct(seat.y, map.height)} - 24px)`,
-										width: "48px",
-										height: "48px",
+										left: `calc(${pct(seat.x, map.width)} - 26px)`,
+										top: `calc(${pct(seat.y, map.height)} - 26px)`,
+										width: "52px",
+										height: "52px",
+										overflow: "visible",
 									}}
-									title={seat.id}
 								>
-									<span>{seat.id.split("-").slice(-1)[0]}</span>
-								</button>
+									<button
+										type="button"
+										disabled={isOccupied}
+										onClick={() => {
+											if (isOccupied) return;
+											onSelectSeat?.(seat.id);
+										}}
+										className={getSeatClasses(isOccupied, isSelected)}
+										style={{
+											width: "52px",
+											height: "52px",
+										}}
+										title={seat.id}
+									>
+										<span>{seat.id.split("-").pop()}</span>
+									</button>
+
+									<div
+										className="pointer-events-none absolute whitespace-nowrap text-[10px] font-semibold text-slate-500"
+										style={labelPosition}
+									>
+										{seat.id}
+									</div>
+								</div>
 							);
 						})}
 					</React.Fragment>

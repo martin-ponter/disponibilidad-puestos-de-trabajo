@@ -626,13 +626,6 @@ export default function ComedorReservationApp() {
 							</div>
 						</div>
 
-						<div className="rounded-2xl border border-blue-200 bg-blue-50 p-4">
-							<p className="text-sm leading-6 text-blue-800">
-								Este flujo usa un plano provisional del comedor. Más adelante podrás sustituirlo
-								por el mapa real manteniendo esta misma lógica.
-							</p>
-						</div>
-
 						{currentReservation ? (
 							<div className="rounded-2xl border border-amber-200 bg-amber-50 p-4">
 								<p className="text-sm font-medium text-amber-800">
