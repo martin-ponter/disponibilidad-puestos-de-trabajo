@@ -134,7 +134,7 @@ export default function ComedorMapReact({
 						No hay mapa de comedor disponible
 					</h4>
 					<p className="mt-2 text-sm leading-6 text-slate-500">
-						Selecciona una oficina válida para visualizar su plano provisional.
+						Selecciona una oficina válida para visualizar su plano.
 					</p>
 				</div>
 			</div>
@@ -152,10 +152,6 @@ export default function ComedorMapReact({
 			>
 				<div className="absolute left-[3%] top-[4%] rounded-2xl bg-white/90 px-4 py-2 text-sm font-semibold text-slate-700 shadow-sm">
 					{map.name}
-				</div>
-
-				<div className="absolute right-[3%] top-[4%] rounded-2xl border border-slate-200 bg-white/90 px-4 py-2 text-xs text-slate-500 shadow-sm">
-					Plano provisional
 				</div>
 
 				{map.hasWindows !== false ? (

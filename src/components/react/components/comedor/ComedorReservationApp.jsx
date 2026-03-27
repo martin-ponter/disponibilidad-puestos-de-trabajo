@@ -687,7 +687,7 @@ export default function ComedorReservationApp() {
 									Aún no hay comedor cargado
 								</h4>
 								<p className="mt-2 text-sm leading-6 text-slate-500">
-									Cuando elijas una oficina aparecerá aquí el plano provisional del comedor.
+									Cuando elijas una oficina aparecerá aquí el plano del comedor.
 								</p>
 							</div>
 						</div>
