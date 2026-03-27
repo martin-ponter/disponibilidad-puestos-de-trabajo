@@ -301,6 +301,11 @@ function normalizeEntry(item, maps) {
 	};
 }
 
+function isComedorEntry(entry) {
+	const resourceType = String(entry?.[FIELD_RESOURCE_TYPE] ?? "").toLowerCase();
+	return resourceType === "comedor";
+}
+
 function mapEntryForModal(entry, enumMaps) {
 	if (!entry) return null;
 
@@ -370,7 +375,9 @@ export default function ReservationCalendarApp() {
 		});
 
 		const rawItems = data?.items || [];
-		const normalizedItems = rawItems.map((item) => normalizeEntry(item, maps));
+		const normalizedItems = rawItems
+			.map((item) => normalizeEntry(item, maps))
+			.filter((item) => !isComedorEntry(item));
 
 		setEntries(normalizedItems);
 	}
@@ -418,15 +425,20 @@ export default function ReservationCalendarApp() {
 					return false;
 				}
 
+				const normalizedItem = normalizeEntry(item, enumMaps);
+				if (isComedorEntry(normalizedItem)) {
+					return false;
+				}
+
 				const status = String(
-					resolveEnumLabel(enumMaps, FIELD_STATUS, item[FIELD_STATUS]) ?? ""
+					normalizedItem[FIELD_STATUS] ?? ""
 				).toLowerCase();
 
 				if (status === "cancelada") {
 					return false;
 				}
 
-				const resource = String(item[FIELD_RESOURCE] ?? "").trim();
+				const resource = String(normalizedItem[FIELD_RESOURCE] ?? "").trim();
 				if (
 					!resource ||
 					resource.toLowerCase() === "teletrabajo" ||
@@ -436,8 +448,8 @@ export default function ReservationCalendarApp() {
 					return false;
 				}
 
-				const itemStart = normalizeTimeValue(item[FIELD_START]);
-				const itemEnd = normalizeTimeValue(item[FIELD_END]);
+				const itemStart = normalizeTimeValue(normalizedItem[FIELD_START]);
+				const itemEnd = normalizeTimeValue(normalizedItem[FIELD_END]);
 
 				if (!itemStart || !itemEnd) {
 					return false;
