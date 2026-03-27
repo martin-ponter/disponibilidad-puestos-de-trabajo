@@ -703,7 +703,7 @@ export const officeMaps: Record<string, OfficeMapDefinition> = {
     ],
   },
 
-  "Madrid::Sala Fiscal": {
+ "Madrid::Sala Fiscal": {
   id: "madrid-sala-fiscal",
   office: "Madrid",
   room: "Sala Fiscal",
@@ -748,7 +748,7 @@ export const officeMaps: Record<string, OfficeMapDefinition> = {
     {
       type: "rect",
       id: "upper-desk-block",
-      x: 230,
+      x: 250,
       y: 190,
       w: 260,
       h: 280,
@@ -757,7 +757,7 @@ export const officeMaps: Record<string, OfficeMapDefinition> = {
     {
       type: "rect",
       id: "middle-desk",
-      x: 330,
+      x: 325,
       y: 560,
       w: 110,
       h: 170,
@@ -766,7 +766,7 @@ export const officeMaps: Record<string, OfficeMapDefinition> = {
     {
       type: "rect",
       id: "lower-desk-block",
-      x: 245,
+      x: 230,
       y: 840,
       w: 300,
       h: 380,
@@ -774,21 +774,21 @@ export const officeMaps: Record<string, OfficeMapDefinition> = {
     },
   ],
   desks: [
-    { id: "MAD-18", x: 235, y: 195, w: 124, h: 134 },
-    { id: "MAD-20", x: 361, y: 195, w: 124, h: 134 },
-    { id: "MAD-19", x: 235, y: 331, w: 124, h: 134 },
-    { id: "MAD-21", x: 361, y: 331, w: 124, h: 134 },
+    { id: "MAD-18", x: 255, y: 195, w: 124, h: 134 },
+    { id: "MAD-20", x: 381, y: 195, w: 124, h: 134 },
+    { id: "MAD-19", x: 255, y: 331, w: 124, h: 134 },
+    { id: "MAD-21", x: 381, y: 331, w: 124, h: 134 },
 
-    { id: "MAD-22", x: 330, y: 560, w: 110, h: 170 },
+    { id: "MAD-22", x: 325, y: 560, w: 110, h: 170 },
 
-    { id: "MAD-24", x: 255, y: 855, w: 145, h: 110 },
-    { id: "MAD-23", x: 400, y: 855, w: 145, h: 110 },
+    { id: "MAD-24", x: 240, y: 855, w: 145, h: 110 },
+    { id: "MAD-23", x: 385, y: 855, w: 145, h: 110 },
 
-    { id: "MAD-26", x: 255, y: 970, w: 145, h: 110 },
-    { id: "MAD-25", x: 400, y: 970, w: 145, h: 110 },
+    { id: "MAD-26", x: 240, y: 970, w: 145, h: 110 },
+    { id: "MAD-25", x: 385, y: 970, w: 145, h: 110 },
 
-    { id: "MAD-28", x: 255, y: 1085, w: 145, h: 110 },
-    { id: "MAD-27", x: 400, y: 1085, w: 145, h: 110 },
+    { id: "MAD-28", x: 240, y: 1085, w: 145, h: 110 },
+    { id: "MAD-27", x: 385, y: 1085, w: 145, h: 110 },
   ],
 },
   "Madrid::Sala Laboral": {
