@@ -64,6 +64,44 @@ export interface OfficeMapDefinition {
 }
 
 export const officeMaps: Record<string, OfficeMapDefinition> = {
+  "Toledo::Puesto Recepción": {
+    id: "toledo-puesto-recepcion",
+    office: "Toledo",
+    room: "Puesto Recepción",
+    width: 1000,
+    height: 560,
+    features: [
+      {
+        type: "label",
+        id: "title",
+        text: "PUESTO RECEPCIÓN",
+        x: 250,
+        y: 18,
+        w: 500,
+        h: 34,
+      },
+      {
+        type: "rect",
+        id: "room-border",
+        x: 90,
+        y: 85,
+        w: 820,
+        h: 400,
+        rounded: true,
+      },
+      {
+        type: "rect",
+        id: "desk-block",
+        x: 270,
+        y: 185,
+        w: 460,
+        h: 190,
+        rounded: true,
+      },
+    ],
+    desks: [{ id: "TOL-00", x: 270, y: 185, w: 460, h: 190 }],
+  },
+
   "Toledo::Sala Laboral-Fiscal": {
     id: "toledo-sala-laboral-fiscal",
     office: "Toledo",
