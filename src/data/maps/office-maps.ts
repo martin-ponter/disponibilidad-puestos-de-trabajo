@@ -714,7 +714,7 @@ export const officeMaps: Record<string, OfficeMapDefinition> = {
       type: "label",
       id: "title",
       text: "SALA FISCAL",
-      x: 300,
+      x: 250,
       y: 26,
       w: 400,
       h: 36,
