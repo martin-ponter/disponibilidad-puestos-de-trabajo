@@ -27,16 +27,6 @@ const OFFICE_DESK_DATA = {
 		{ id: "M7" },
 		{ id: "M8" },
 	],
-	Alcobendas: [
-		{ id: "A1" },
-		{ id: "A2" },
-		{ id: "A3" },
-		{ id: "A4" },
-		{ id: "A5" },
-		{ id: "A6" },
-		{ id: "A7" },
-		{ id: "A8" },
-	],
 	Consuegra: [
 		{ id: "C1" },
 		{ id: "C2" },
@@ -49,7 +39,7 @@ const OFFICE_DESK_DATA = {
 	],
 };
 
-const CENTER_OPTIONS = ["Toledo", "Madrid", "Alcobendas", "Consuegra"];
+const CENTER_OPTIONS = ["Toledo", "Madrid", "Consuegra"];
 const DEFAULT_START_TIME = "09:00";
 const DEFAULT_END_TIME = "18:00";
 

@@ -327,7 +327,6 @@ export default function ViewDesksReact({
 										<option value="">Selecciona una oficina</option>
 										<option value="Toledo">Toledo</option>
 										<option value="Madrid">Madrid</option>
-										<option value="Alcobendas">Alcobendas</option>
 										<option value="Consuegra">Consuegra</option>
 									</select>
 								</div>

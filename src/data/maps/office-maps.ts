@@ -1,4 +1,4 @@
-export type Office = "Toledo" | "Madrid" | "Alcobendas" | "Consuegra";
+export type Office = "Toledo" | "Madrid" | "Consuegra";
 
 export interface MapLabelFeature {
   type: "label";

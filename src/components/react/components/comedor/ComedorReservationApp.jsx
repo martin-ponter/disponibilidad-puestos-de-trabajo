@@ -16,11 +16,10 @@ const FIELD_FULL_DAY = "ufCrm22_1774342876";
 
 const ENTITY_TYPE_ID = 1058;
 
-const CENTER_OPTIONS = ["Toledo", "Madrid", "Alcobendas", "Consuegra"];
+const CENTER_OPTIONS = ["Toledo", "Madrid", "Consuegra"];
 const COMEDOR_ROOM_BY_OFFICE = {
 	Toledo: "Comedor Toledo",
 	Madrid: "Comedor Madrid",
-	Alcobendas: "Comedor Alcobendas",
 	Consuegra: "Comedor Consuegra",
 };
 

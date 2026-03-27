@@ -447,7 +447,6 @@ export default function Cards() {
 							<option value="all">Todas</option>
 							<option value="Toledo">Toledo</option>
 							<option value="Madrid">Madrid</option>
-							<option value="Alcobendas">Alcobendas</option>
 							<option value="Consuegra">Consuegra</option>
 							<option value="Teletrabajo">Teletrabajo</option>
 							<option value="-">Sin centro</option>

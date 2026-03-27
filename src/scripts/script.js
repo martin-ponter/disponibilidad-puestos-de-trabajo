@@ -9,7 +9,6 @@ const officeRooms = {
 		"Open Space",
 	],
 	Madrid: ["Sala A", "Sala B", "Sala Dirección", "Sala Colaborativa"],
-	Alcobendas: ["Sala Atlas", "Sala Nexo", "Sala Focus"],
 	Consuegra: ["Sala Central", "Sala Archivo", "Sala Clientes"],
 };
 
@@ -33,16 +32,6 @@ const officeDeskData = {
 		{ id: "M6", available: false },
 		{ id: "M7", available: true },
 		{ id: "M8", available: true },
-	],
-	Alcobendas: [
-		{ id: "A1", available: true },
-		{ id: "A2", available: true },
-		{ id: "A3", available: true },
-		{ id: "A4", available: false },
-		{ id: "A5", available: true },
-		{ id: "A6", available: false },
-		{ id: "A7", available: true },
-		{ id: "A8", available: true },
 	],
 	Consuegra: [
 		{ id: "C1", available: false },

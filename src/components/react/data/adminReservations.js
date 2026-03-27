@@ -33,16 +33,6 @@ export const officeDeskData = {
     { id: "M7", available: true },
     { id: "M8", available: true },
   ],
-  Alcobendas: [
-    { id: "A1", available: true },
-    { id: "A2", available: true },
-    { id: "A3", available: true },
-    { id: "A4", available: false },
-    { id: "A5", available: true },
-    { id: "A6", available: false },
-    { id: "A7", available: true },
-    { id: "A8", available: true },
-  ],
   Consuegra: [
     { id: "C1", available: true },
     { id: "C2", available: true },
