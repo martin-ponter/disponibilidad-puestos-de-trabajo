@@ -898,14 +898,6 @@ export const officeMaps: Record<string, OfficeMapDefinition> = {
         rounded: true,
       },
       {
-        type: "line",
-        id: "desk-divider-horizontal",
-        x: 290,
-        y: 300,
-        w: 420,
-        h: 2,
-      },
-      {
         type: "label",
         id: "entrada-label",
         text: "ENTRADA",
