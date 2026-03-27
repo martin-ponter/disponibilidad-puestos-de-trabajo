@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { officeMaps } from "../../../../data/maps/office-maps.js";
 import OfficeMapReact from "../ver-mesas/OfficeMapReact.jsx";
 
@@ -332,8 +332,8 @@ export default function ReservationDayModal({
 							type="button"
 							onClick={() => setWorkStatus("works")}
 							className={`rounded-3xl border p-5 text-left shadow-sm transition ${workStatus === "works"
-									? "border-blue-400 bg-blue-50 ring-2 ring-blue-200"
-									: "border-slate-200 bg-white hover:border-blue-300 hover:bg-blue-50"
+								? "border-blue-400 bg-blue-50 ring-2 ring-blue-200"
+								: "border-slate-200 bg-white hover:border-blue-300 hover:bg-blue-50"
 								}`}
 						>
 							<div className="mb-4 flex h-12 w-12 items-center justify-center rounded-2xl bg-emerald-50 text-2xl">
@@ -349,8 +349,8 @@ export default function ReservationDayModal({
 							type="button"
 							onClick={() => setWorkStatus("not-works")}
 							className={`rounded-3xl border p-5 text-left shadow-sm transition ${workStatus === "not-works"
-									? "border-blue-400 bg-blue-50 ring-2 ring-blue-200"
-									: "border-slate-200 bg-white hover:border-blue-300 hover:bg-blue-50"
+								? "border-blue-400 bg-blue-50 ring-2 ring-blue-200"
+								: "border-slate-200 bg-white hover:border-blue-300 hover:bg-blue-50"
 								}`}
 						>
 							<div className="mb-4 flex h-12 w-12 items-center justify-center rounded-2xl bg-amber-50 text-2xl">

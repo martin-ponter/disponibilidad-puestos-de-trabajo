@@ -122,11 +122,10 @@ export default function OfficeMapReact({
 									<span>{desk.id}</span>
 									<span
 										className={`mt-1 rounded-full px-2 py-0.5 text-[9px] font-medium sm:text-[10px] ${isAvailable
-												? "bg-emerald-100 text-emerald-700"
-												: "bg-rose-100 text-rose-700"
+											? "bg-emerald-100 text-emerald-700"
+											: "bg-rose-100 text-rose-700"
 											}`}
 									>
-										{isAvailable ? "Libre" : "Ocupada"}
 									</span>
 								</div>
 							</button>
@@ -167,18 +166,18 @@ export default function OfficeMapReact({
 								onSelectDesk(desk.id);
 							}}
 							className={`group relative flex min-h-23 items-center justify-center rounded-3xl border-2 text-sm font-semibold transition duration-200 ${!isAvailable
-									? "cursor-not-allowed border-rose-200 bg-rose-50 text-rose-700"
-									: isSelected
-										? "border-blue-400 bg-blue-50 text-blue-700 shadow-md shadow-blue-100"
-										: "cursor-pointer border-emerald-200 bg-emerald-50 text-emerald-700 hover:scale-[1.02] hover:border-emerald-300"
+								? "cursor-not-allowed border-rose-200 bg-rose-50 text-rose-700"
+								: isSelected
+									? "border-blue-400 bg-blue-50 text-blue-700 shadow-md shadow-blue-100"
+									: "cursor-pointer border-emerald-200 bg-emerald-50 text-emerald-700 hover:scale-[1.02] hover:border-emerald-300"
 								}`}
 						>
 							<div className="flex flex-col items-center justify-center gap-2">
 								<span className="text-base">{desk.id}</span>
 								<span
 									className={`rounded-full px-2 py-1 text-[11px] font-medium ${isAvailable
-											? "bg-emerald-100 text-emerald-700"
-											: "bg-rose-100 text-rose-700"
+										? "bg-emerald-100 text-emerald-700"
+										: "bg-rose-100 text-rose-700"
 										}`}
 								>
 									{isAvailable ? "Disponible" : "Ocupada"}
