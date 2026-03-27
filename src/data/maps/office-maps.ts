@@ -979,7 +979,7 @@ export const officeMaps: Record<string, OfficeMapDefinition> = {
         type: "label",
         id: "title",
         text: "SALA PRINCIPAL",
-        x: 600,
+        x: 500,
         y: 8,
         w: 260,
         h: 28,
