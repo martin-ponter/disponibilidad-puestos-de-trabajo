@@ -2,34 +2,34 @@ import React, { useMemo } from "react";
 
 const COMEDOR_MAPS = {
 	Toledo: {
-		name: "Comedor Toledo",
-		width: 1000,
-		height: 620,
-		hasWindows: false,
-		tables: [
-			{
-				id: "table-toledo-main",
-				x: 450,
-				y: 135,
-				w: 120,
-				h: 290,
-				label: "Mesa central",
-				seats: [
-					{ id: "TOL-CMDR-01", x: 340, y: 175 },
-					{ id: "TOL-CMDR-02", x: 340, y: 245 },
-					{ id: "TOL-CMDR-03", x: 340, y: 315 },
-					{ id: "TOL-CMDR-04", x: 340, y: 385 },
+	name: "Comedor Toledo",
+	width: 1000,
+	height: 620,
+	hasWindows: false,
+	tables: [
+		{
+			id: "table-toledo-main",
+			x: 455,
+			y: 120,
+			w: 140,
+			h: 300,
+			label: "Mesa central",
+			seats: [
+				{ id: "TOL-CMDR-01", x: 320, y: 150 },
+				{ id: "TOL-CMDR-02", x: 320, y: 235 },
+				{ id: "TOL-CMDR-03", x: 320, y: 320 },
+				{ id: "TOL-CMDR-04", x: 320, y: 405 },
 
-					{ id: "TOL-CMDR-05", x: 680, y: 175 },
-					{ id: "TOL-CMDR-06", x: 680, y: 245 },
-					{ id: "TOL-CMDR-07", x: 680, y: 315 },
-					{ id: "TOL-CMDR-08", x: 680, y: 385 },
+				{ id: "TOL-CMDR-05", x: 700, y: 150 },
+				{ id: "TOL-CMDR-06", x: 700, y: 235 },
+				{ id: "TOL-CMDR-07", x: 700, y: 320 },
+				{ id: "TOL-CMDR-08", x: 700, y: 405 },
 
-					{ id: "TOL-CMDR-09", x: 510, y: 510 },
-				],
-			},
-		],
-	},
+				{ id: "TOL-CMDR-09", x: 510, y: 530 },
+			],
+		},
+	],
+},
 	Madrid: {
 		name: "Comedor Madrid",
 		width: 1000,
@@ -352,12 +352,12 @@ export default function ComedorMapReact({
 									key={seat.id}
 									className="absolute"
 									style={{
-										left: `calc(${pct(seat.x, map.width)} - 28px)`,
-										top: `calc(${pct(seat.y, map.height)} - 28px)`,
-										width: "56px",
-										height: "56px",
-										overflow: "visible",
-									}}
+                                        left: `calc(${pct(seat.x, map.width)} - 24px)`,
+                                        top: `calc(${pct(seat.y, map.height)} - 24px)`,
+                                        width: "48px",
+                                        height: "48px",
+                                        overflow: "visible",
+                                    }}
 								>
 									<button
 										type="button"
@@ -368,8 +368,8 @@ export default function ComedorMapReact({
 										}}
 										className={getSeatClasses(isOccupied, isSelected)}
 										style={{
-											width: "56px",
-											height: "56px",
+											width: "48px",
+											height: "48px",
 										}}
 										title={seat.id}
 									>
